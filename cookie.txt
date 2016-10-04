@@ -1,0 +1,9 @@
+# Netscape HTTP Cookie File
+# http://www.netscape.com/newsref/std/cookie_spec.html
+# This is a generated file!  Do not edit.
+
+.ieee.org	TRUE	/	FALSE		ERIGHTS	4uD3DFWCV2mOM6KZbhDsZpjZUsiXWeFd*ibE1t2MF46b6pxx7geN0nEQx3Dx3D-18x2dNUnsihSZ61UILyGpmx2Fh9wgx3Dx3D9UdyJqEcpWjDJUdxxCdvZqAx3Dx3D-LIucCApDmwa5b0S9Q1cx2Fzwx3Dx3D-GCFTK2DYlK2kipq43gtAx2FAx3Dx3D
+.ieee.org	TRUE	/	FALSE		TS01f64340	012f3506232bb4accf2b5ac3c63fbfdb057bd809a913b93cff2b3a81dbc54f04e937937ed2d0352a7bf41f6f4a1569699078a67eedaad4644d5cac4c41485d575a77a9d3fc
+.ieee.org	TRUE	/	FALSE		seqId	68879
+ieeexplore.ieee.org	FALSE	/	FALSE		TS011813a0	012f350623501bfdd17fed2c0df79c3a4738df9a8f5725de0c8367701fe170ad6b17601a840d40fab02e60281c1cb00aa5feecf7a0
+ieeexplore.ieee.org	FALSE	/	FALSE	1475329443	WLSESSION	891445900.20480.0000
