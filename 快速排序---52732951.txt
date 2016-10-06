@@ -1,0 +1,200 @@
+快速排序
+
+
+快速排序是经常用到的一段代码，据说是最有影响力的10大算法（未考证）
+
+说到排序，我们数一下常见的一共有几种：
+
+冒泡、选择、插入、希尔、快排、堆排、索引、桶排其实还有一个中位数的中位数排序（名字记不得了）
+
+
+
+
+时间复杂度：快排在评均的情况下nlog(n)，最坏n^2
+
+原理呢：采用分治策略，先选出一个元素，然后以此为基准，比它小的放左边，比它大的放右边，这样把区间划分成左右两部分（跟它一样大的怎么办呢？）。经过一次划分，基准元素就已经被放在正确的位置上了。然后分别对左右两个区间递归进行划分，经过n次划分最终所有元素都会被排好序。
+
+如果每次我们选的基准元素恰好能把数组分成长度相同的2个子区间，则快排的效率是最高的，复杂度nlog(n)。
+
+反之，如果每次总是一个子区间元素最少（0个），一个子区间元素最多（n-1个），此时快排效率最低，复杂度n^2，例如，待排序数组已经基本有序时
+
+此处应该有证明（略）
+
+形象化的图示请参考其他博客
+
+
+
+
+看了网上的一些帖子和一些代码，总结如下：
+
+快速排序实现有不同的版本（for和while版本），但原理一样
+
+如果某人的代码是不完全正确的，他的代码必定忽略了一个问题，对于跟基准元素一样大的怎么处理，放左还是放右？其实就是数组中含有重复元素的情况。
+
+根据快排的原理“比基准小的放左边，比基准大的放右边”，其实隐含着跟基准一样大的不用管！
+
+下面4个版本的代码，v1,v2,v3可以处理重复元素的数组，v4只能对不重复的数组排序。
+
+一定要注意v2与v4的区别
+
+
+
+#include <iostream>
+
+using namespace std;
+
+//算法导论版
+int partitionV1(int *a,int low,int high)
+{
+    int pivot=a[high];
+    int i=low-1;
+    int j,temp;
+    for(j=low;j<high;j++)
+    {
+        if(a[j]<pivot)
+        {
+            temp=a[++i];
+            a[i]=a[j];
+            a[j]=temp;
+        }
+    }
+    temp=a[i+1];
+    a[i+1]=a[high];
+    a[high]=temp;
+    return i+1;
+}
+int partitionV2(int *a,int low,int high)
+{
+    int key=a[low];
+    int i=low,j=high;
+    while(i<j)
+    {
+        while(i<j&&a[j]>=key)j--;
+        a[i]=a[j];
+        while(i<j&&a[i]<=key)i++;
+        a[j]=a[i];
+    }
+    a[i]=key;
+    return i;
+}
+int partitionV3(int *a,int low,int high)
+{
+    int key=a[low];
+    int i=low,j=high;
+    while(i<j)
+    {
+        while(i<j&&a[j]>=key)j--;
+        while(i<j&&a[i]<=key)i++;
+        int temp=a[i];
+        a[i]=a[j];
+        a[j]=temp;
+    }
+    a[i]=key;
+    return i;
+}
+//V4与2唯一的区别在于内层循环判断条件少了“=”
+//实际上它只能对无重复元素的序列进行排序
+int partitionV4(int *a,int low,int high)
+{
+    int key=a[low];
+    int i=low,j=high;
+    while(i<j)
+    {
+        while(i<j&&a[j]>key)j--;
+        a[i]=a[j];
+        while(i<j&&a[i]<key)i++;
+        a[j]=a[i];
+    }
+    a[i]=key;
+    return i;
+}
+void QuickSort1(int *a,int low,int high)
+{
+    if(low<high)
+    {
+        int mid=partitionV1(a,low,high);
+        QuickSort1(a,low,mid-1);
+        QuickSort1(a,mid+1,high);
+    }
+}
+void QuickSort2(int *a,int low,int high)
+{
+    if(low<high)
+    {
+        int mid=partitionV2(a,low,high);
+        QuickSort2(a,low,mid-1);
+        QuickSort2(a,mid+1,high);
+    }
+}
+void QuickSort3(int *a,int low,int high)
+{
+    if(low<high)
+    {
+        int mid=partitionV3(a,low,high);
+        QuickSort3(a,low,mid-1);
+        QuickSort3(a,mid+1,high);
+    }
+}
+void QuickSort4(int *a,int low,int high)
+{
+    if(low<high)
+    {
+        int mid=partitionV4(a,low,high);
+        QuickSort4(a,low,mid-1);
+        QuickSort4(a,mid+1,high);
+    }
+}
+int main()
+{
+    int a[100],n;
+    cout<<"请输入要排序的数的个数：";
+    while(cin>>n&&n&&n<=100)
+    {
+        cout<<"请输入"<<n<<"个数：";
+        for(int i=0;i<n;i++)
+        {
+            cin>>a[i];
+        }
+        cout << "PartitionV1:我是老大，排序请找我，老二老三都是跟我学的！" << endl;
+        QuickSort1(a,0,n);
+        for(int i=0;i<n;i++)
+        {
+            cout<<a[i]<<" ";
+        }
+        cout<<endl;
+        cout << "PartitionV2:我是老二，排序请找我，老大是骗子！" << endl;
+        QuickSort2(a,0,n);
+        for(int i=0;i<n;i++)
+        {
+            cout<<a[i]<<" ";
+        }
+        cout<<endl;
+        cout << "PartitionV3:我是老三，排序请找我，老大是骗子，我比老二厉害！" << endl;
+        QuickSort3(a,0,n);
+        for(int i=0;i<n;i++)
+        {
+            cout<<a[i]<<" ";
+        }
+        cout<<endl;
+        cout << "PartitionV4:我是老四，学排序的时候偷懒了，功能没有他们全。" << endl;
+        cout << "我只能对不重复的序列排序，毕竟比别人少俩‘=’嘛！" << endl;
+        cout << "对于包含重复元素的序列，请找我大哥，二哥，或三哥！" << endl;
+        cout << "如果我没有输出，那你是个坏蛋，我不理你了（死循环）！" << endl;
+        QuickSort4(a,0,n);
+        for(int i=0;i<n;i++)
+        {
+            cout<<a[i]<<" ";
+        }
+        cout<<endl;
+    }
+
+    return 0;
+}
+
+
+
+
+
+
+
+   

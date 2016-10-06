@@ -35,7 +35,7 @@ class QSBK:
 		if not pageCode:
 			print u"页面加载失败。。。"
 			return None
-		pattern = re.compile('<div class="author clearfix">.*?<h2>(.*?)</h2>.*?"content">(.*?)</div>.*?number">(.*?)</.*?number">(.*?)</.',re.S)
+		pattern = re.compile('<div class="author clearfix">.*?<h2>(.*?)</h2>.*?"content">.*?<span>(.*?)</span>.*?number">(.*?)</.*?number">(.*?)</.',re.S)
 		items = re.findall(pattern, pageCode)
 		pageStories = []
 		for item in items:
