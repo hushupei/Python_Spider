@@ -62,6 +62,7 @@ class CSDN:
 					articleID=re.findall(pattern,item[0])
 					pattern=re.compile('class="article_content">(.*?)</div>',re.S)
 					text=re.findall(pattern,pageCode)
+					#这个地方刚开始少写了'[0]'，造成编码对不上，花费了许多时间
 					article=text[0]
 					#修复代码块
 					article=self.repairCode(article)
