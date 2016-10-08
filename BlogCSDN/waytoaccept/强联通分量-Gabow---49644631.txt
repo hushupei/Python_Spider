@@ -1,0 +1,103 @@
+
+
+Gabow与Tarjan的思想相同。Gabow用栈模拟tarjan的low[]数组。
+
+算法思想：http://blog.csdn.net/waytoaccept/article/details/49642945
+
+
+
+
+
+#include <iostream>
+#include<cstring>
+#define Node 100
+using namespace std;
+struct Edge
+{
+    int v,w,next;
+}edge[Node*Node];
+int head[Node];
+int time[Node];
+int in[Node];
+int t=0,n,cnt=0,ret=0;
+int stk1[Node],top1=0;
+int stk2[Node],top2=0;
+void addEdge(int u,int v,int w)
+{
+    edge[cnt].v=v;edge[cnt].w=w;
+    edge[cnt].next=head[u];head[u]=cnt++;
+}
+void DFS(int u)
+{
+    time[u]=++t;
+    stk1[top1++]=u;
+    stk2[top2++]=u;
+    in[u]=1;
+    for(int e=head[u];e!=-1;e=edge[e].next)
+    {
+        int v=edge[e].v;
+        if(time[v]==0)
+        {
+            DFS(v);
+        }
+        else if(in[v])
+        {
+            while(time[stk2[top2-1]]>time[v])top2--;//如果子节点v先前访问过,stk2[]退栈，直到栈顶为v
+        }
+    }
+    if(u==stk2[top2-1])                             //当前节点是强联通分量的第一个访问的节点
+    {
+        top2--;
+        cout<<++ret<<":";
+        int v;
+        do
+        {
+            v=stk1[--top1];
+            in[v]=0;
+            cout<<v<<" ";
+        }while(v!=u);                               //stk1[]中上边一部分就是一个强联通分量，退栈后保持与stk2[]同步
+        cout<<endl;
+    }
+}
+void Gabow()
+{
+    memset(in,0,sizeof(in));
+    memset(time,0,sizeof(time));
+    top1=0,top2=0,ret=0;
+    for(int i=1;i<=n;i++)
+    {
+        if(time[i]==0)
+        {
+            DFS(i);
+        }
+    }
+}
+int main()
+{
+    int m;
+    while(cin>>n>>m)
+    {
+        memset(head,-1,sizeof(head));
+        memset(edge,0,sizeof(edge));
+        int s,e,c,cnt=0;
+        for(int i=1;i<=m;i++)
+        {
+            cin>>s>>e>>c;
+            addEdge(s,e,c);
+        }
+        Gabow();
+    }
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+   

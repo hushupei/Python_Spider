@@ -1,0 +1,184 @@
+
+
+             键盘输入
+
+
+
+
+            GLUT允许我们编写程序，在里面加入键盘输入控制，包括了普通键，和其他特殊键（如F1,UP）。在这一章里我们
+将学习如何去检测哪个键被按下，可以从GLUT里得到些什么信息，和如何处理键盘输入。
+            到现在，你应该注意到了，只要你想控制一个事件的处理，你就必须提前告诉GLUT，哪个函数将完成这个任务。
+到现在为止，我们已经使用GLUT告诉窗口系统，当窗口重绘时我们想调用哪个渲染函数，当系统空闲时，哪个函数被调用。
+当窗口大小改变时，哪个函数又将被调用。
+
+相&#20284;的，我们必须做同样的事来处理按键消息。我们必须使用GLUT通知窗口系统，当某个键被按下时，哪个函数
+将完成所要求的操作。我们同样是调用一个函数注册相关的回调函数。
+
+
+一函数介绍：
+
+
+
+
+当你按下一个键后，GLUT提供了两个函数为这个键盘消息注册回调。
+①glutKeyboardFunc
+普通按键
+
+的按键消息。
+    这个函数是告诉窗口系统，哪一个函数将会被调用来处理普通按键消息。
+    普通键是指字母，数字，和其他可以用ASCII代码表示的键。函数原型如下：
+    void glutKeyboardFunc(void(*func)(unsigned char key,int x,int y));
+    参数：
+    func: 处理普通按键消息的函数的名称。如果传递NULL，则表示GLUT忽略普通按键消息。
+    这个作为glutKeyboardFunc函数参数的函数需要有三个形参。第一个表示按下的键的ASCII码，
+    其余两个提供了，当键按下时当前的鼠标位置。鼠标位置是相对于当前客户窗口的左上角而言的。
+
+    一个经常的用法是当按下ESCAPE键时退出应用程序。注意，我们提到过，glutMainLoop函数产生的
+    是一个永无止境的循环。唯一的跳出循环的方法就是调用系统exit函数。这就是我们函数要做的，当
+    按下ESCAPE键调用exit函数终止应用程序（同时要记住在源代码包含头文件 stdlib.h）。
+    下面就是这个函数的代码：
+    void processNormalKeys(unsigned char key,int x,int y)
+    {
+          if(key==27)
+                Exit(0);
+    }
+
+②glutSpecialFunc
+特殊按键
+
+的按键消息。
+    GLUT提供函数glutSpecialFunc以便当有特殊键按下的消息时，你能注册你的函数。
+    函数原型如下：
+    void glutSpecialFunc(void (*func)(int key,int x,int y));
+    参数：
+    func: 处理特殊键按下消息的函数的名称。传递NULL则表示GLUT忽略特殊键消息。
+
+    下面我们写一个函数，当一些特殊键按下的时候，改变我们的三角形的颜色。
+    这个函数使在按下F1键时三角形为红色，按下F2键时为绿色，按下F3键时为蓝色。
+
+    void processSpecialKeys(int key, int x, int y) {
+
+             switch(key) {
+                     case GLUT_KEY_F1 :
+                         red = 1.0;
+                              green = 0.0;
+                                        blue = 0.0; break;
+          case GLUT_KEY_F2 :
+                                        red = 0.0;
+                                        green = 1.0;
+                                       blue = 0.0; break;
+                      case GLUT_KEY_F3 :
+                                        red = 0.0;
+                                        green = 0.0;
+                                       blue = 1.0; break;
+             }
+    }
+   上面的GLUT_KEY_*在glut.h里已经被预定义为常量。这组常量如下：
+
+
+二 组合键的处理：
+
+
+    CTRL,ALT和SHIFT
+
+   一些时候我们想知道要是一个组合键（modifier key）也就是CTRL,ALT或者SHIFT被按下该如何处理。
+   GLUT提供了一个函数来检测时候有组合键被按下。
+  这个函数仅仅只能在处理按键消息或者鼠标消息函数里被调用
+
+。函数原型如下：
+  int glutGetModifiers(void);
+
+
+    这个函数的返回&#20540;是三个glut.h里预定义的常量里的一个，或它们的或组合。这三个常量是：
+    1：GLUT_ACTIVE_SHIFT: 返回它，当按下SHIFT键或以按下CAPS LOCK，注意两者同时按下时，不会返回这个&#20540;。
+    2：GLUT_ACTIVE_CTRL: 返回它，当按下CTRL键。
+    3：GLUT_ACTIVE_ATL:返回它,当按下ATL键。
+   注意，窗口系统可能会截取一些组合键（modifiers），这是就没有回调发生。
+  
+   现在让我们扩充processNormalKeys，处理组合键。按下r键时red变量被设置为0.0，当按下ATL+r时red被设置为1.0。代码如下：
+   void processNormalKeys(unsigned char key, int x, int y) {
+
+            if (key == 27)
+                    exit(0);
+            else if (key=='r') {
+                    int mod = glutGetModifiers();
+                   if (mod == GLUT_ACTIVE_ALT)
+                              red = 0.0;
+                     else
+                              red = 1.0;
+            }
+   }
+   注意如果我们按下R键，将不会有什么发生，因为R与r键的ASCII码不同。即这是两个不同的键。
+   最后就是如何检测按键 CTRL+ALT+F1?。这种情况下，我们必须同时检测两个
+
+   组合键，为了完成操作我们需要使用或操作符。下面的代码段，使你按下CTRL+ALT+F1 时颜色改变为红色。
+   void processSpecialKeys(int key, int x, int y) {
+
+            int mod;
+            switch(key) {
+                    case GLUT_KEY_F1 :
+                        mod = glutGetModifiers();
+                        if (mod == (GLUT_ACTIVE_CTRL|GLUT_ACTIVE_ALT)) {
+                             red = 1.0; green = 0.0; blue = 0.0;
+                        }
+                        break;
+                    case GLUT_KEY_F2 :
+                        red = 0.0;
+                        green = 1.0;
+                        blue = 0.0; break;
+                    case GLUT_KEY_F3 :
+                        red = 0.0;
+                        green = 0.0;
+                        blue = 1.0; break;
+            }
+   }
+
+
+
+
+
+
+
+三         高级键盘控制（keyboard features）
+
+
+
+4个新的处理键盘输入的函数。
+
+①去禁止keyboard repeat。函数原型如下：
+  int glutSetKeyRepeat(int repeatMode);
+
+
+   参数：
+   repeatMode：开启，禁用，或恢复auto repeat模式，下面是它可能的取&#20540;。
+   RepeatMode的可能取&#20540;如下：
+   GLUT_KEY_REPEAT_OFF：关闭auto repeat模式。
+   GLUT_KEY_REPEAT_ON：开启auto repeat模式。
+   GLUT_KEY_REPEAT_DEFAULT：把auto repeat模式恢复到默认状态。
+
+   注意这个函数，作用范围是全局性的。也就是，它会影响所有窗口的repeat模式。不仅仅是我们应用程序这一个。
+   因此注意当使用这个函数关闭auto repeat模式后，有必要在程序结束时将auto repeat模式重设到默认模式。
+
+   GLUT提供我们另外一个简单的函数，来禁用keyboard repeat，这个让我们安全的忽视keyboard repeat，而不会影响其他程序。函数原型如下：
+②Int glutIgnoreKeyRepeat(int repeatMode);
+
+
+   参数：
+   RepeatMode：传递0，开启auto repeat，非0则禁用auto repeat。
+   在一些情况下，当key repeat发生时，我们将不接受函数回调。
+  
+③然而如果你想在一个key被按下后，执行一个动作，你就需要知道这个key什么时候松开
+
+。GLUT提供了两个函数注
+
+   册相关的回调函数。
+  Void glutKeyboardUpFunc(void (*func)(unsigned char key,int x,int y));
+   Void glutSpecialUpFunc(void (*func)(int key,int x,int y));
+
+
+   参数：
+   Func：回调函数的函数名。
+
+ 
+
+   

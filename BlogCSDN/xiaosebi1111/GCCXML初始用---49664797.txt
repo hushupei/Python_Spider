@@ -1,0 +1,1351 @@
+
+
+上面生成的gccxml.exe就是我们用来解析源码文件的工具，当然这玩意不能单独使用，他只是一个补丁，他得依附在编译器上，所以你得保证你的电脑上安装了编译器。下面是GCCXML支持的几个编译器（有点奇怪的是我电脑上其实只有vs2010，但也成功了，虽然下面没有列出来
+后来经过测试发现确实用的是08的，可能之前没有卸载干净，可以通过get_gccxml_compiler
+(
+)来获取当前的版本
+）：
+
+·            GCC
+: Versions 4.2,4.1, 4.0, 3.4, 3.3, 3.2, 2.95.x
+
+·            VisualC++
+: Versions 8, 7.1, 7.0, and 6 (sp5)
+
+·            Borland,Intel, SGI
+: formerly supported but no longer tested
+
+他的命令行&#26684;式是这样的：gccxml[options] <input-file> -fxml=<output-file>
+
+具体的选项可以参考http://gccxml.github.io/HTML/Running.html
+，这里我只用了最简单的&#26684;式。
+
+这里用来测试的文件是取自SWMM引擎的hash.c代码如下：
+
+
+
+
+
+
+//-----------------------------------------------------------------------------
+//   hash.c
+//
+//   Implementation of a simple Hash Table for string storage & retrieval
+//   CASE INSENSITIVE
+//
+//   Written by L. Rossman
+//   Last Updated on 6/19/03
+//
+//   The hash table data structure (HTable) is defined in "hash.h".
+//   Interface Functions:
+//      HTcreate() - creates a hash table
+//      HTinsert() - inserts a string & its index value into a hash table
+//      HTfind()   - retrieves the index value of a string from a table
+//      HTfree()   - frees a hash table
+//-----------------------------------------------------------------------------
+
+#include <malloc.h>
+#include <string.h>
+#include "hash.h"
+#define UCHAR(x) (((x) >= 'a' && (x) <= 'z') ? ((x)&~32) : (x))
+
+/* Case-insensitive comparison of strings s1 and s2 */
+int  samestr(char *s1, char *s2)
+{
+   int i;
+   for (i=0; UCHAR(s1[i]) == UCHAR(s2[i]); i++)
+     if (!s1[i+1] && !s2[i+1]) return(1);
+   return(0);
+}                                       /*  End of samestr  */
+
+/* Use Fletcher's checksum to compute 2-byte hash of string */
+unsigned int hash(char *str)
+{
+    unsigned int sum1= 0, check1;
+    unsigned long sum2= 0L;
+	while(  '\0' != *str  )
+    {
+        sum1 += UCHAR(*str);
+        str++;
+        if (  255 <= sum1  ) sum1 -= 255;
+        sum2 += sum1;
+    }
+    check1= sum2;
+    check1 %= 255;
+    check1= 255 - (sum1+check1) % 255;
+    sum1= 255 - (sum1+check1) % 255;
+    return( ( ( check1 << 8 )  |  sum1  ) % HTMAXSIZE);
+}
+
+HTtable *HTcreate()
+{
+        int i;
+        HTtable *ht = (HTtable *) calloc(HTMAXSIZE, sizeof(HTtable));
+        if (ht != NULL) for (i=0; i<HTMAXSIZE; i++) ht[i] = NULL;
+        return(ht);
+}
+
+int     HTinsert(HTtable *ht, char *key, int data)
+{
+        unsigned int i = hash(key);
+        struct HTentry *entry;
+        if ( i >= HTMAXSIZE ) return(0);
+        entry = (struct HTentry *) malloc(sizeof(struct HTentry));
+        if (entry == NULL) return(0);
+        entry->key = key;
+        entry->data = data;
+        entry->next = ht[i];
+        ht[i] = entry;
+        return(1);
+}
+
+int     HTfind(HTtable *ht, char *key)
+{
+        unsigned int i = hash(key);
+        struct HTentry *entry;
+        if ( i >= HTMAXSIZE ) return(NOTFOUND);
+        entry = ht[i];
+        while (entry != NULL)
+        {
+            if ( samestr(entry->key,key) ) return(entry->data);
+            entry = entry->next;
+        }
+        return(NOTFOUND);
+}
+
+char    *HTfindKey(HTtable *ht, char *key)
+{
+        unsigned int i = hash(key);
+        struct HTentry *entry;
+        if ( i >= HTMAXSIZE ) return(NULL);
+        entry = ht[i];
+        while (entry != NULL)
+        {
+            if ( samestr(entry->key,key) ) return(entry->key);
+            entry = entry->next;
+        }
+        return(NULL);
+}
+
+void    HTfree(HTtable *ht)
+{
+        struct HTentry *entry,
+                       *nextentry;
+        int i;
+        for (i=0; i<HTMAXSIZE; i++)
+        {
+            entry = ht[i];
+            while (entry != NULL)
+            {
+                nextentry = entry->next;
+                free(entry);
+                entry = nextentry;
+            }
+        }
+        free(ht);
+}
+
+
+
+
+
+
+
+当然你要保证你的代码和文件路径（这里的文件路径包含引用的头文件）是没有问题的，不然编译器会检测出问题，而导致失败。
+
+ 
+
+然后通过执行
+
+
+
+
+就可以看到在D盘下生成了hash.xml文件。具体文件如下：
+
+<?xml version="1.0"?>
+<GCC_XML cvs_revision="1.135">
+  <Namespace id="_1" name="::" members="_3 _4 _5 _6 _7 _8 _9 _12 _13 _14 _16 _17 _18 _19 _23 _24 _26 _27 _28 _30 _31 _32 _33 _34 _36 _37 _38 _39 _41 _42 _43 _44 _46 _47 _50 _54 _55 _57 _58 _59 _60 _61 _64 _66 _67 _68 _69 _70 _72 _73 _74 _75 _77 _78 _79 _80 _81 _84 _85 _86 _87 _89 _90 _91 _92 _93 _94 _95 _97 _98 _99 _100 _101 _102 _103 _104 _105 _106 _107 _109 _110 _113 _115 _116 _119 _120 _121 _122 _123 _124 _125 _126 _127 _130 _131 _133 _136 _138 _139 _140 _141 _143 _144 _2 _145 _146 _147 _148 _149 _150 _151 _152 _153 _155 _156 _159 _160 _161 _162 _164 _166 _63 _167 _169 _170 _171 _173 _174 _176 _177 _180 _181 _182 _183 _184 _185 _186 _187 _190 _191 _192 _193 _194 _195 _196 _197 _163 _198 _200 _201 _202 _203 _205 _206 _207 _208 _210 _211 _212 _213 _214 _215 _216 _217 _218 _219 _220 _221 _222 _223 _224 _227 _229 _234 _235 _45 _236 _237 _241 _243 _244 _246 _247 _249 _250 _251 _252 _253 _254 _255 _257 _258 " mangled="_Z2::" demangled="::"/>
+  <Namespace id="_2" name="std" context="_1" members="" mangled="_Z3std" demangled="std"/>
+  <Function id="_3" name="_wcsset" returns="_259" context="_1" location="f0:332" file="f0" line="332" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:332" file="f0" line="332"/>
+    <Argument name="_Val" type="_260" location="f0:332" file="f0" line="332"/>
+  </Function>
+  <Function id="_4" name="strtok" returns="_65" context="_1" location="f0:197" file="f0" line="197" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:197" file="f0" line="197"/>
+    <Argument name="_Delim" type="_261" location="f0:197" file="f0" line="197"/>
+  </Function>
+  <Function id="_5" name="_strset" returns="_65" context="_1" location="f0:100" file="f0" line="100" extern="1" attributes="__cdecl__">
+    <Argument name="_Dest" type="_65" location="f0:100" file="f0" line="100"/>
+    <Argument name="_Value" type="_114" location="f0:100" file="f0" line="100"/>
+  </Function>
+  <Function id="_6" name="_MarkAllocaS" returns="_262" context="_1" location="f1:192" file="f1" line="192" endline="199" inline="1">
+    <Argument name="_Ptr" type="_262" location="f1:192" file="f1" line="192"/>
+    <Argument name="_Marker" type="_29" location="f1:192" file="f1" line="192"/>
+  </Function>
+  <Function id="_7" name="HTfind" returns="_114" context="_1" mangled="_Z6HTfindPP7HTentryPc" demangled="HTfind(HTentry**, char*)" location="f2:73" file="f2" line="73" endline="84">
+    <Argument name="ht" type="_263" location="f2:73" file="f2" line="73"/>
+    <Argument name="key" type="_65" location="f2:73" file="f2" line="73"/>
+  </Function>
+  <Function id="_8" name="_strcmpi" returns="_114" context="_1" location="f0:143" file="f0" line="143" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:143" file="f0" line="143"/>
+    <Argument name="_Str2" type="_261" location="f0:143" file="f0" line="143"/>
+  </Function>
+  <Function id="_9" name="_wcsicmp" returns="_114" context="_1" location="f0:322" file="f0" line="322" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:322" file="f0" line="322"/>
+    <Argument name="_Str2" type="_264" location="f0:322" file="f0" line="322"/>
+  </Function>
+  <Function id="_10" name="wcscpy_s" returns="_115" context="_1" location="f0:280" file="f0" line="280" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_259" location="f0:280" file="f0" line="280"/>
+    <Argument name="_SizeInWords" type="_30" location="f0:280" file="f0" line="280"/>
+    <Argument name="_Src" type="_264" location="f0:280" file="f0" line="280"/>
+  </Function>
+  <FundamentalType id="_11" name="short unsigned int" size="16" align="16"/>
+  <Typedef id="_12" name="wctype_t" type="_11" context="_1" location="f3:448" file="f3" line="448"/>
+  <Function id="_13" name="wcsnlen" returns="_161" context="_1" location="f0:286" file="f0" line="286" extern="1" attributes="__cdecl__">
+    <Argument name="_Src" type="_264" location="f0:286" file="f0" line="286"/>
+    <Argument name="_MaxCount" type="_161" location="f0:286" file="f0" line="286"/>
+  </Function>
+  <Function id="_14" name="_heapset" returns="_114" context="_1" location="f1:169" file="f1" line="169" extern="1" attributes="__cdecl__">
+    <Argument name="_Fill" type="_29" location="f1:169" file="f1" line="169"/>
+  </Function>
+  <Struct id="_15" name="PostBoundAttribute" context="_93" mangled="N13vc_attributes18PostBoundAttributeE" demangled="vc_attributes::PostBoundAttribute" location="f4:179" file="f4" line="179" artificial="1" size="32" align="32" members="_265 _266 _267 _268 _269 " bases=""/>
+  <Typedef id="_16" name="SA_PostBound" type="_15" context="_1" location="f4:253" file="f4" line="253"/>
+  <Function id="_17" name="_wcsicoll_l" returns="_114" context="_1" location="f0:351" file="f0" line="351" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:351" file="f0" line="351"/>
+    <Argument name="_Str2" type="_264" location="f0:351" file="f0" line="351"/>
+    <Argument name="_Locale" type="_54" location="f0:351" file="f0" line="351"/>
+  </Function>
+  <Function id="_18" name="_wcsxfrm_l" returns="_161" context="_1" location="f0:347" file="f0" line="347" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_259" location="f0:347" file="f0" line="347"/>
+    <Argument name="_Src" type="_264" location="f0:347" file="f0" line="347"/>
+    <Argument name="_MaxCount" type="_161" location="f0:347" file="f0" line="347"/>
+    <Argument name="_Locale" type="_54" location="f0:347" file="f0" line="347"/>
+  </Function>
+  <Function id="_19" name="_wcscoll_l" returns="_114" context="_1" location="f0:349" file="f0" line="349" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:349" file="f0" line="349"/>
+    <Argument name="_Str2" type="_264" location="f0:349" file="f0" line="349"/>
+    <Argument name="_Locale" type="_54" location="f0:349" file="f0" line="349"/>
+  </Function>
+  <Function id="_20" name="wcspbrk" returns="_259" context="_1" mangled="_Z7wcspbrkPwPKw" demangled="wcspbrk(wchar_t*, wchar_t const*)" location="f0:363" file="f0" line="363" endline="364" inline="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:363" file="f0" line="363"/>
+    <Argument name="_Control" type="_264" location="f0:363" file="f0" line="363"/>
+  </Function>
+  <Function id="_21" name="wcspbrk" returns="_264" context="_1" location="f0:307" file="f0" line="307" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_264" location="f0:307" file="f0" line="307"/>
+    <Argument name="_Control" type="_264" location="f0:307" file="f0" line="307"/>
+  </Function>
+  <Enumeration id="_22" name="YesNoMaybe" context="_93" location="f4:56" file="f4" line="56" artificial="1" size="32" align="32">
+    <EnumValue name="No" init="268369921"/>
+    <EnumValue name="Maybe" init="268369936"/>
+    <EnumValue name="Yes" init="268370176"/>
+  </Enumeration>
+  <Typedef id="_23" name="SA_YesNoMaybe" type="_270" context="_1" location="f4:235" file="f4" line="235"/>
+  <Function id="_24" name="_freea" returns="_271" context="_1" location="f1:227" file="f1" line="227" endline="230" inline="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:227" file="f1" line="227"/>
+  </Function>
+  <FundamentalType id="_25" name="long long int" size="64" align="64"/>
+  <Typedef id="_26" name="time_t" type="_74" context="_1" location="f3:486" file="f3" line="486"/>
+  <Function id="_27" name="_heapadd" returns="_114" context="_1" location="f1:166" file="f1" line="166" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:166" file="f1" line="166"/>
+    <Argument name="_Size" type="_161" location="f1:166" file="f1" line="166"/>
+  </Function>
+  <Function id="_28" name="_wcsnicoll_l" returns="_114" context="_1" location="f0:355" file="f0" line="355" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:355" file="f0" line="355"/>
+    <Argument name="_Str2" type="_264" location="f0:355" file="f0" line="355"/>
+    <Argument name="_MaxCount" type="_161" location="f0:355" file="f0" line="355"/>
+    <Argument name="_Locale" type="_54" location="f0:355" file="f0" line="355"/>
+  </Function>
+  <FundamentalType id="_29" name="unsigned int" size="32" align="32"/>
+  <Typedef id="_30" name="rsize_t" type="_161" context="_1" location="f3:409" file="f3" line="409"/>
+  <Function id="_31" name="_stricmp_l" returns="_114" context="_1" location="f0:144" file="f0" line="144" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:144" file="f0" line="144"/>
+    <Argument name="_Str2" type="_261" location="f0:144" file="f0" line="144"/>
+    <Argument name="_Locale" type="_54" location="f0:144" file="f0" line="144"/>
+  </Function>
+  <Function id="_32" name="_strnicoll_l" returns="_114" context="_1" location="f0:152" file="f0" line="152" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:152" file="f0" line="152"/>
+    <Argument name="_Str2" type="_261" location="f0:152" file="f0" line="152"/>
+    <Argument name="_MaxCount" type="_161" location="f0:152" file="f0" line="152"/>
+    <Argument name="_Locale" type="_54" location="f0:152" file="f0" line="152"/>
+  </Function>
+  <Variable id="_33" name="SA_NoAccess" type="_272c" init="NoAccess" context="_1" location="f4:241" file="f4" line="241" static="1"/>
+  <Function id="_34" name="wcstok" returns="_259" context="_1" location="f0:311" file="f0" line="311" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:311" file="f0" line="311"/>
+    <Argument name="_Delim" type="_264" location="f0:311" file="f0" line="311"/>
+  </Function>
+  <Struct id="_35" name="PreAttribute" context="_93" mangled="N13vc_attributes12PreAttributeE" demangled="vc_attributes::PreAttribute" location="f4:80" file="f4" line="80" artificial="1" size="672" align="32" members="_274 _275 _276 _277 _278 _279 _280 _281 _282 _283 _284 _285 _286 _287 _288 _289 _290 _291 _292 _293 _294 _295 _296 _297 _298 " bases=""/>
+  <Typedef id="_36" name="SA_Pre" type="_35" context="_1" location="f4:247" file="f4" line="247"/>
+  <Function id="_37" name="_strcoll_l" returns="_114" context="_1" location="f0:146" file="f0" line="146" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:146" file="f0" line="146"/>
+    <Argument name="_Str2" type="_261" location="f0:146" file="f0" line="146"/>
+    <Argument name="_Locale" type="_54" location="f0:146" file="f0" line="146"/>
+  </Function>
+  <Function id="_38" name="_wcsnset" returns="_259" context="_1" location="f0:328" file="f0" line="328" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:328" file="f0" line="328"/>
+    <Argument name="_Val" type="_260" location="f0:328" file="f0" line="328"/>
+    <Argument name="_MaxCount" type="_161" location="f0:328" file="f0" line="328"/>
+  </Function>
+  <Function id="_39" name="_wcslwr" returns="_259" context="_1" location="f0:336" file="f0" line="336" extern="1" attributes="__cdecl__">
+    <Argument name="_String" type="_259" location="f0:336" file="f0" line="336"/>
+  </Function>
+  <Struct id="_40" name="SuccessAttribute" context="_93" mangled="N13vc_attributes16SuccessAttributeE" demangled="vc_attributes::SuccessAttribute" location="f4:160" file="f4" line="160" artificial="1" size="32" align="32" members="_299 _300 _301 _302 _303 " bases=""/>
+  <Typedef id="_41" name="SA_Success" type="_40" context="_1" location="f4:251" file="f4" line="251"/>
+  <Function id="_42" name="HTinsert" returns="_114" context="_1" mangled="_Z8HTinsertPP7HTentryPci" demangled="HTinsert(HTentry**, char*, int)" location="f2:59" file="f2" line="59" endline="70">
+    <Argument name="ht" type="_263" location="f2:59" file="f2" line="59"/>
+    <Argument name="key" type="_65" location="f2:59" file="f2" line="59"/>
+    <Argument name="data" type="_114" location="f2:59" file="f2" line="59"/>
+  </Function>
+  <Function id="_43" name="_aligned_offset_realloc" returns="_262" context="_1" location="f1:119" file="f1" line="119" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:119" file="f1" line="119"/>
+    <Argument name="_NewSize" type="_161" location="f1:119" file="f1" line="119"/>
+    <Argument name="_Alignment" type="_161" location="f1:119" file="f1" line="119"/>
+    <Argument name="_Offset" type="_161" location="f1:119" file="f1" line="119"/>
+  </Function>
+  <Struct id="_44" name="_heapinfo" context="_1" mangled="9_heapinfo" demangled="_heapinfo" location="f1:58" file="f1" line="58" artificial="1" size="96" align="32" members="_304 _305 _306 _307 _308 _309 _310 " bases=""/>
+  <Struct id="_45" name="tagLC_ID" context="_1" mangled="8tagLC_ID" demangled="tagLC_ID" location="f3:1966" file="f3" line="1966" artificial="1" size="48" align="16" members="_311 _312 _313 _314 _315 _316 _317 " bases=""/>
+  <Typedef id="_46" name="LC_ID" type="_45" context="_1" location="f3:1970" file="f3" line="1970"/>
+  <Function id="_47" name="wcsxfrm" returns="_161" context="_1" location="f0:346" file="f0" line="346" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_259" location="f0:346" file="f0" line="346"/>
+    <Argument name="_Src" type="_264" location="f0:346" file="f0" line="346"/>
+    <Argument name="_MaxCount" type="_161" location="f0:346" file="f0" line="346"/>
+  </Function>
+  <Function id="_48" name="memchr" returns="_262" context="_1" mangled="_Z6memchrPvij" demangled="memchr(void*, int, unsigned int)" location="f0:225" file="f0" line="225" endline="226" inline="1" attributes="__cdecl__">
+    <Argument name="_Pv" type="_262" location="f0:225" file="f0" line="225"/>
+    <Argument name="_C" type="_114" location="f0:225" file="f0" line="225"/>
+    <Argument name="_N" type="_161" location="f0:225" file="f0" line="225"/>
+  </Function>
+  <Function id="_49" name="memchr" returns="_318" context="_1" location="f0:47" file="f0" line="47" extern="1" attributes="__cdecl__">
+    <Argument name="_Buf" type="_318" location="f0:47" file="f0" line="47"/>
+    <Argument name="_Val" type="_114" location="f0:47" file="f0" line="47"/>
+    <Argument name="_MaxCount" type="_161" location="f0:47" file="f0" line="47"/>
+  </Function>
+  <Function id="_50" name="_recalloc" returns="_262" context="_1" location="f1:110" file="f1" line="110" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:110" file="f1" line="110"/>
+    <Argument name="_Count" type="_161" location="f1:110" file="f1" line="110"/>
+    <Argument name="_Size" type="_161" location="f1:110" file="f1" line="110"/>
+  </Function>
+  <Function id="_51" name="strncat_s" returns="_115" context="_1" location="f0:169" file="f0" line="169" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_65" location="f0:169" file="f0" line="169"/>
+    <Argument name="_SizeInBytes" type="_30" location="f0:169" file="f0" line="169"/>
+    <Argument name="_Src" type="_261" location="f0:169" file="f0" line="169"/>
+    <Argument name="_MaxCount" type="_30" location="f0:169" file="f0" line="169"/>
+  </Function>
+  <Function id="_52" name="__wcserror_s" returns="_115" context="_1" location="f0:319" file="f0" line="319" extern="1" attributes="__cdecl__">
+    <Argument name="_Buffer" type="_259" location="f0:319" file="f0" line="319"/>
+    <Argument name="_SizeInWords" type="_161" location="f0:319" file="f0" line="319"/>
+    <Argument name="_ErrMsg" type="_264" location="f0:319" file="f0" line="319"/>
+  </Function>
+  <PointerType id="_53" type="_63" size="32" align="32"/>
+  <Typedef id="_54" name="_locale_t" type="_53" context="_1" location="f3:1963" file="f3" line="1963"/>
+  <Function id="_55" name="memmove" returns="_262" context="_1" location="f0:127" file="f0" line="127" extern="1" attributes="nothrow __cdecl__ nonnull">
+    <Argument name="_Dst" type="_262" location="f0:127" file="f0" line="127"/>
+    <Argument name="_Src" type="_318" location="f0:127" file="f0" line="127"/>
+    <Argument name="_Size" type="_161" location="f0:127" file="f0" line="127"/>
+  </Function>
+  <Function id="_56" name="_wcsupr_s" returns="_115" context="_1" location="f0:340" file="f0" line="340" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:340" file="f0" line="340"/>
+    <Argument name="_Size" type="_161" location="f0:340" file="f0" line="340"/>
+  </Function>
+  <Function id="_57" name="memcpy" returns="_262" context="_1" location="f0:51" file="f0" line="51" extern="1" attributes="nothrow __cdecl__ nonnull">
+    <Argument name="_Dst" type="_262" location="f0:51" file="f0" line="51"/>
+    <Argument name="_Src" type="_318" location="f0:51" file="f0" line="51"/>
+    <Argument name="_Size" type="_161" location="f0:51" file="f0" line="51"/>
+  </Function>
+  <Function id="_58" name="strncat" returns="_65" context="_1" location="f0:175" file="f0" line="175" extern="1" attributes="nothrow __cdecl__ nonnull">
+    <Argument name="_Dest" type="_65" location="f0:175" file="f0" line="175"/>
+    <Argument name="_Source" type="_261" location="f0:175" file="f0" line="175"/>
+    <Argument name="_Count" type="_161" location="f0:175" file="f0" line="175"/>
+  </Function>
+  <Function id="_59" name="_wcsnicoll" returns="_114" context="_1" location="f0:354" file="f0" line="354" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:354" file="f0" line="354"/>
+    <Argument name="_Str2" type="_264" location="f0:354" file="f0" line="354"/>
+    <Argument name="_MaxCount" type="_161" location="f0:354" file="f0" line="354"/>
+  </Function>
+  <Function id="_60" name="_memicmp_l" returns="_114" context="_1" location="f0:49" file="f0" line="49" extern="1" attributes="__cdecl__">
+    <Argument name="_Buf1" type="_318" location="f0:49" file="f0" line="49"/>
+    <Argument name="_Buf2" type="_318" location="f0:49" file="f0" line="49"/>
+    <Argument name="_Size" type="_161" location="f0:49" file="f0" line="49"/>
+    <Argument name="_Locale" type="_54" location="f0:49" file="f0" line="49"/>
+  </Function>
+  <Function id="_61" name="_resetstkoflw" returns="_114" context="_1" location="f1:142" file="f1" line="142" extern="1" attributes="__cdecl__"/>
+  <Function id="_62" name="_wcsupr_s_l" returns="_115" context="_1" location="f0:343" file="f0" line="343" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:343" file="f0" line="343"/>
+    <Argument name="_Size" type="_161" location="f0:343" file="f0" line="343"/>
+    <Argument name="_Locale" type="_54" location="f0:343" file="f0" line="343"/>
+  </Function>
+  <Struct id="_63" name="localeinfo_struct" context="_1" mangled="17localeinfo_struct" demangled="localeinfo_struct" location="f3:1960" file="f3" line="1960" artificial="1" size="64" align="32" members="_319 _320 _321 _322 _323 _324 " bases=""/>
+  <Typedef id="_64" name="_locale_tstruct" type="_63" context="_1" location="f3:1963" file="f3" line="1963"/>
+  <PointerType id="_65" type="_325" size="32" align="32"/>
+  <Typedef id="_66" name="va_list" type="_65" context="_1" location="f5:57" file="f5" line="57"/>
+  <Function id="_67" name="_strlwr_l" returns="_65" context="_1" location="f0:167" file="f0" line="167" extern="1" attributes="__cdecl__">
+    <Argument name="_String" type="_65" location="f0:167" file="f0" line="167"/>
+    <Argument name="_Locale" type="_54" location="f0:167" file="f0" line="167"/>
+  </Function>
+  <Function id="_68" name="memcpy_s" returns="_115" context="_1" location="f0:53" file="f0" line="53" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_262" location="f0:53" file="f0" line="53"/>
+    <Argument name="_DstSize" type="_30" location="f0:53" file="f0" line="53"/>
+    <Argument name="_Src" type="_318" location="f0:53" file="f0" line="53"/>
+    <Argument name="_MaxCount" type="_30" location="f0:53" file="f0" line="53"/>
+  </Function>
+  <Function id="_69" name="strnset" returns="_65" context="_1" location="f0:249" file="f0" line="249" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:249" file="f0" line="249"/>
+    <Argument name="_Val" type="_114" location="f0:249" file="f0" line="249"/>
+    <Argument name="_MaxCount" type="_161" location="f0:249" file="f0" line="249"/>
+  </Function>
+  <Function id="_70" name="wcsicoll" returns="_114" context="_1" location="f0:397" file="f0" line="397" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:397" file="f0" line="397"/>
+    <Argument name="_Str2" type="_264" location="f0:397" file="f0" line="397"/>
+  </Function>
+  <Function id="_71" name="strcat_s" returns="_115" context="_1" location="f0:107" file="f0" line="107" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_65" location="f0:107" file="f0" line="107"/>
+    <Argument name="_SizeInBytes" type="_30" location="f0:107" file="f0" line="107"/>
+    <Argument name="_Src" type="_261" location="f0:107" file="f0" line="107"/>
+  </Function>
+  <Function id="_72" name="_aligned_free" returns="_271" context="_1" location="f1:111" file="f1" line="111" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:111" file="f1" line="111"/>
+  </Function>
+  <Variable id="_73" name="SA_ReadWrite" type="_272c" init="ReadWrite" context="_1" location="f4:244" file="f4" line="244" static="1"/>
+  <Typedef id="_74" name="__time64_t" type="_25" context="_1" location="f3:478" file="f3" line="478"/>
+  <Typedef id="_75" name="_HEAPINFO" type="_44" context="_1" location="f1:62" file="f1" line="62"/>
+  <Function id="_76" name="_strset_s" returns="_115" context="_1" location="f0:98" file="f0" line="98" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_65" location="f0:98" file="f0" line="98"/>
+    <Argument name="_DstSize" type="_161" location="f0:98" file="f0" line="98"/>
+    <Argument name="_Value" type="_114" location="f0:98" file="f0" line="98"/>
+  </Function>
+  <Function id="_77" name="strncmp" returns="_114" context="_1" location="f0:180" file="f0" line="180" extern="1" attributes="nothrow pure __cdecl__ nonnull">
+    <Argument name="_Str1" type="_261" location="f0:180" file="f0" line="180"/>
+    <Argument name="_Str2" type="_261" location="f0:180" file="f0" line="180"/>
+    <Argument name="_MaxCount" type="_161" location="f0:180" file="f0" line="180"/>
+  </Function>
+  <Variable id="_78" name="SA_Maybe" type="_270c" init="Maybe" context="_1" location="f4:238" file="f4" line="238" static="1"/>
+  <Function id="_79" name="strncpy" returns="_65" context="_1" location="f0:188" file="f0" line="188" extern="1" attributes="nothrow __cdecl__ nonnull">
+    <Argument name="_Dest" type="_65" location="f0:188" file="f0" line="188"/>
+    <Argument name="_Source" type="_261" location="f0:188" file="f0" line="188"/>
+    <Argument name="_Count" type="_161" location="f0:188" file="f0" line="188"/>
+  </Function>
+  <Function id="_80" name="_invalid_parameter_noinfo" returns="_271" context="_1" location="f3:545" file="f3" line="545" extern="1" attributes="__cdecl__"/>
+  <Function id="_81" name="free" returns="_271" context="_1" location="f1:105" file="f1" line="105" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:105" file="f1" line="105"/>
+  </Function>
+  <Function id="_82" name="wcscat_s" returns="_115" context="_1" location="f0:273" file="f0" line="273" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_259" location="f0:273" file="f0" line="273"/>
+    <Argument name="_SizeInWords" type="_30" location="f0:273" file="f0" line="273"/>
+    <Argument name="_Src" type="_264" location="f0:273" file="f0" line="273"/>
+  </Function>
+  <Function id="_83" name="strerror_s" returns="_115" context="_1" location="f0:159" file="f0" line="159" extern="1" attributes="__cdecl__">
+    <Argument name="_Buf" type="_65" location="f0:159" file="f0" line="159"/>
+    <Argument name="_SizeInBytes" type="_161" location="f0:159" file="f0" line="159"/>
+    <Argument name="_ErrNum" type="_114" location="f0:159" file="f0" line="159"/>
+  </Function>
+  <Function id="_84" name="_strerror" returns="_65" context="_1" location="f0:154" file="f0" line="154" extern="1" attributes="__cdecl__">
+    <Argument name="_ErrMsg" type="_261" location="f0:154" file="f0" line="154"/>
+  </Function>
+  <Variable id="_85" name="SA_Write" type="_272c" init="Write" context="_1" location="f4:243" file="f4" line="243" static="1"/>
+  <Function id="_86" name="_strnicmp" returns="_114" context="_1" location="f0:182" file="f0" line="182" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:182" file="f0" line="182"/>
+    <Argument name="_Str2" type="_261" location="f0:182" file="f0" line="182"/>
+    <Argument name="_MaxCount" type="_161" location="f0:182" file="f0" line="182"/>
+  </Function>
+  <Function id="_87" name="strnlen_s" returns="_161" static="1" context="_1" location="f0:115" file="f0" line="115" endline="117" inline="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_261" location="f0:115" file="f0" line="115"/>
+    <Argument name="_MaxCount" type="_161" location="f0:115" file="f0" line="115"/>
+  </Function>
+  <Struct id="_88" name="InvalidCheckAttribute" context="_93" mangled="N13vc_attributes21InvalidCheckAttributeE" demangled="vc_attributes::InvalidCheckAttribute" location="f4:151" file="f4" line="151" artificial="1" size="32" align="32" members="_327 _328 _329 _330 _331 " bases=""/>
+  <Typedef id="_89" name="SA_InvalidCheck" type="_88" context="_1" location="f4:250" file="f4" line="250"/>
+  <Function id="_90" name="memccpy" returns="_262" context="_1" location="f0:92" file="f0" line="92" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_262" location="f0:92" file="f0" line="92"/>
+    <Argument name="_Src" type="_318" location="f0:92" file="f0" line="92"/>
+    <Argument name="_Val" type="_114" location="f0:92" file="f0" line="92"/>
+    <Argument name="_Size" type="_161" location="f0:92" file="f0" line="92"/>
+  </Function>
+  <Function id="_91" name="realloc" returns="_262" context="_1" location="f1:108" file="f1" line="108" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:108" file="f1" line="108"/>
+    <Argument name="_NewSize" type="_161" location="f1:108" file="f1" line="108"/>
+  </Function>
+  <Function id="_92" name="_wcserror" returns="_259" context="_1" location="f0:315" file="f0" line="315" extern="1" attributes="__cdecl__">
+    <Argument name="_ErrNum" type="_114" location="f0:315" file="f0" line="315"/>
+  </Function>
+  <Namespace id="_93" name="vc_attributes" context="_1" members="_137 _15 _35 _88 _40 _108 _270 _22 _240 _272 _204 _168 _175 " mangled="_Z13vc_attributes" demangled="vc_attributes"/>
+  <Function id="_94" name="_wcsnicmp" returns="_114" context="_1" location="f0:324" file="f0" line="324" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:324" file="f0" line="324"/>
+    <Argument name="_Str2" type="_264" location="f0:324" file="f0" line="324"/>
+    <Argument name="_MaxCount" type="_161" location="f0:324" file="f0" line="324"/>
+  </Function>
+  <Function id="_95" name="_strupr_l" returns="_65" context="_1" location="f0:206" file="f0" line="206" extern="1" attributes="__cdecl__">
+    <Argument name="_String" type="_65" location="f0:206" file="f0" line="206"/>
+    <Argument name="_Locale" type="_54" location="f0:206" file="f0" line="206"/>
+  </Function>
+  <Function id="_96" name="_strupr_s" returns="_115" context="_1" location="f0:201" file="f0" line="201" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:201" file="f0" line="201"/>
+    <Argument name="_Size" type="_161" location="f0:201" file="f0" line="201"/>
+  </Function>
+  <Function id="_97" name="wcsncat" returns="_259" context="_1" location="f0:299" file="f0" line="299" extern="1" attributes="__cdecl__">
+    <Argument name="_Dest" type="_259" location="f0:299" file="f0" line="299"/>
+    <Argument name="_Source" type="_264" location="f0:299" file="f0" line="299"/>
+    <Argument name="_Count" type="_161" location="f0:299" file="f0" line="299"/>
+  </Function>
+  <Function id="_98" name="_wcsupr_l" returns="_259" context="_1" location="f0:345" file="f0" line="345" extern="1" attributes="__cdecl__">
+    <Argument name="_String" type="_259" location="f0:345" file="f0" line="345"/>
+    <Argument name="_Locale" type="_54" location="f0:345" file="f0" line="345"/>
+  </Function>
+  <Namespace id="_99" name="__cxxabiv1" context="_1" members="" mangled="_Z10__cxxabiv1" demangled="__cxxabiv1"/>
+  <Function id="_100" name="_wcsnicmp_l" returns="_114" context="_1" location="f0:325" file="f0" line="325" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:325" file="f0" line="325"/>
+    <Argument name="_Str2" type="_264" location="f0:325" file="f0" line="325"/>
+    <Argument name="_MaxCount" type="_161" location="f0:325" file="f0" line="325"/>
+    <Argument name="_Locale" type="_54" location="f0:325" file="f0" line="325"/>
+  </Function>
+  <Function id="_101" name="_heapmin" returns="_114" context="_1" location="f1:168" file="f1" line="168" extern="1" attributes="__cdecl__"/>
+  <Function id="_102" name="hash" returns="_29" context="_1" mangled="_Z4hashPc" demangled="hash(char*)" location="f2:33" file="f2" line="33" endline="48">
+    <Argument name="str" type="_65" location="f2:33" file="f2" line="33"/>
+  </Function>
+  <Function id="_103" name="wcsupr" returns="_259" context="_1" location="f0:396" file="f0" line="396" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:396" file="f0" line="396"/>
+  </Function>
+  <Function id="_104" name="wcscat" returns="_259" context="_1" location="f0:276" file="f0" line="276" extern="1" attributes="__cdecl__">
+    <Argument name="_Dest" type="_259" location="f0:276" file="f0" line="276"/>
+    <Argument name="_Source" type="_264" location="f0:276" file="f0" line="276"/>
+  </Function>
+  <Function id="_105" name="strupr" returns="_65" context="_1" location="f0:252" file="f0" line="252" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:252" file="f0" line="252"/>
+  </Function>
+  <Function id="_106" name="strcat" returns="_65" context="_1" location="f0:110" file="f0" line="110" extern="1" attributes="nothrow __cdecl__ nonnull">
+    <Argument name="_Dest" type="_65" location="f0:110" file="f0" line="110"/>
+    <Argument name="_Source" type="_261" location="f0:110" file="f0" line="110"/>
+  </Function>
+  <Function id="_107" name="memmove_s" returns="_115" context="_1" location="f0:121" file="f0" line="121" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_262" location="f0:121" file="f0" line="121"/>
+    <Argument name="_DstSize" type="_30" location="f0:121" file="f0" line="121"/>
+    <Argument name="_Src" type="_318" location="f0:121" file="f0" line="121"/>
+    <Argument name="_MaxCount" type="_30" location="f0:121" file="f0" line="121"/>
+  </Function>
+  <Struct id="_108" name="FormatStringAttribute" context="_93" mangled="N13vc_attributes21FormatStringAttributeE" demangled="vc_attributes::FormatStringAttribute" location="f4:140" file="f4" line="140" artificial="1" size="64" align="32" members="_332 _333 _334 _335 _336 _337 " bases=""/>
+  <Typedef id="_109" name="SA_FormatString" type="_108" context="_1" location="f4:249" file="f4" line="249"/>
+  <Function id="_110" name="HTfree" returns="_271" context="_1" mangled="_Z6HTfreePP7HTentry" demangled="HTfree(HTentry**)" location="f2:101" file="f2" line="101" endline="116">
+    <Argument name="ht" type="_263" location="f2:101" file="f2" line="101"/>
+  </Function>
+  <Function id="_111" name="wcschr" returns="_259" context="_1" mangled="_Z6wcschrPww" demangled="wcschr(wchar_t*, wchar_t)" location="f0:361" file="f0" line="361" endline="362" inline="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:361" file="f0" line="361"/>
+    <Argument name="_Ch" type="_260" location="f0:361" file="f0" line="361"/>
+  </Function>
+  <Function id="_112" name="wcschr" returns="_264" context="_1" location="f0:277" file="f0" line="277" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_264" location="f0:277" file="f0" line="277"/>
+    <Argument name="_Ch" type="_260" location="f0:277" file="f0" line="277"/>
+  </Function>
+  <Function id="_113" name="_aligned_offset_malloc" returns="_262" context="_1" location="f1:113" file="f1" line="113" extern="1" attributes="__cdecl__">
+    <Argument name="_Size" type="_161" location="f1:113" file="f1" line="113"/>
+    <Argument name="_Alignment" type="_161" location="f1:113" file="f1" line="113"/>
+    <Argument name="_Offset" type="_161" location="f1:113" file="f1" line="113"/>
+  </Function>
+  <FundamentalType id="_114" name="int" size="32" align="32"/>
+  <Typedef id="_115" name="errno_t" type="_114" context="_1" location="f3:469" file="f3" line="469"/>
+  <Function id="_116" name="_strncoll" returns="_114" context="_1" location="f0:149" file="f0" line="149" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:149" file="f0" line="149"/>
+    <Argument name="_Str2" type="_261" location="f0:149" file="f0" line="149"/>
+    <Argument name="_MaxCount" type="_161" location="f0:149" file="f0" line="149"/>
+  </Function>
+  <Function id="_117" name="strchr" returns="_65" context="_1" mangled="_Z6strchrPci" demangled="strchr(char*, int)" location="f0:214" file="f0" line="214" endline="215" inline="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:214" file="f0" line="214"/>
+    <Argument name="_Ch" type="_114" location="f0:214" file="f0" line="214"/>
+  </Function>
+  <Function id="_118" name="strchr" returns="_261" context="_1" location="f0:141" file="f0" line="141" extern="1" attributes="nothrow pure __cdecl__">
+    <Argument name="_Str" type="_261" location="f0:141" file="f0" line="141"/>
+    <Argument name="_Val" type="_114" location="f0:141" file="f0" line="141"/>
+  </Function>
+  <Function id="_119" name="memicmp" returns="_114" context="_1" location="f0:93" file="f0" line="93" extern="1" attributes="__cdecl__">
+    <Argument name="_Buf1" type="_318" location="f0:93" file="f0" line="93"/>
+    <Argument name="_Buf2" type="_318" location="f0:93" file="f0" line="93"/>
+    <Argument name="_Size" type="_161" location="f0:93" file="f0" line="93"/>
+  </Function>
+  <Function id="_120" name="wcscmp" returns="_114" context="_1" location="f0:278" file="f0" line="278" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:278" file="f0" line="278"/>
+    <Argument name="_Str2" type="_264" location="f0:278" file="f0" line="278"/>
+  </Function>
+  <Function id="_121" name="wcsncpy" returns="_259" context="_1" location="f0:306" file="f0" line="306" extern="1" attributes="__cdecl__">
+    <Argument name="_Dest" type="_259" location="f0:306" file="f0" line="306"/>
+    <Argument name="_Source" type="_264" location="f0:306" file="f0" line="306"/>
+    <Argument name="_Count" type="_161" location="f0:306" file="f0" line="306"/>
+  </Function>
+  <Function id="_122" name="strcmp" returns="_114" context="_1" location="f0:111" file="f0" line="111" extern="1" attributes="nothrow pure __cdecl__ nonnull">
+    <Argument name="_Str1" type="_261" location="f0:111" file="f0" line="111"/>
+    <Argument name="_Str2" type="_261" location="f0:111" file="f0" line="111"/>
+  </Function>
+  <Function id="_123" name="wcscpy" returns="_259" context="_1" location="f0:283" file="f0" line="283" extern="1" attributes="__cdecl__">
+    <Argument name="_Dest" type="_259" location="f0:283" file="f0" line="283"/>
+    <Argument name="_Source" type="_264" location="f0:283" file="f0" line="283"/>
+  </Function>
+  <Function id="_124" name="strcpy" returns="_65" context="_1" location="f0:105" file="f0" line="105" extern="1" attributes="nothrow __cdecl__ nonnull">
+    <Argument name="_Dest" type="_65" location="f0:105" file="f0" line="105"/>
+    <Argument name="_Source" type="_261" location="f0:105" file="f0" line="105"/>
+  </Function>
+  <Function id="_125" name="_wcsncoll_l" returns="_114" context="_1" location="f0:353" file="f0" line="353" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:353" file="f0" line="353"/>
+    <Argument name="_Str2" type="_264" location="f0:353" file="f0" line="353"/>
+    <Argument name="_MaxCount" type="_161" location="f0:353" file="f0" line="353"/>
+    <Argument name="_Locale" type="_54" location="f0:353" file="f0" line="353"/>
+  </Function>
+  <Function id="_126" name="_get_heap_handle" returns="_160" context="_1" location="f1:173" file="f1" line="173" extern="1" attributes="__cdecl__"/>
+  <Function id="_127" name="_wcsncoll" returns="_114" context="_1" location="f0:352" file="f0" line="352" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:352" file="f0" line="352"/>
+    <Argument name="_Str2" type="_264" location="f0:352" file="f0" line="352"/>
+    <Argument name="_MaxCount" type="_161" location="f0:352" file="f0" line="352"/>
+  </Function>
+  <Function id="_128" name="wcsncpy_s" returns="_115" context="_1" location="f0:303" file="f0" line="303" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_259" location="f0:303" file="f0" line="303"/>
+    <Argument name="_SizeInWords" type="_30" location="f0:303" file="f0" line="303"/>
+    <Argument name="_Src" type="_264" location="f0:303" file="f0" line="303"/>
+    <Argument name="_MaxCount" type="_30" location="f0:303" file="f0" line="303"/>
+  </Function>
+  <Function id="_129" name="_wcslwr_s_l" returns="_115" context="_1" location="f0:337" file="f0" line="337" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:337" file="f0" line="337"/>
+    <Argument name="_SizeInWords" type="_161" location="f0:337" file="f0" line="337"/>
+    <Argument name="_Locale" type="_54" location="f0:337" file="f0" line="337"/>
+  </Function>
+  <Typedef id="_130" name="ptrdiff_t" type="_114" context="_1" location="f3:436" file="f3" line="436"/>
+  <Function id="_131" name="wcsncmp" returns="_114" context="_1" location="f0:301" file="f0" line="301" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:301" file="f0" line="301"/>
+    <Argument name="_Str2" type="_264" location="f0:301" file="f0" line="301"/>
+    <Argument name="_MaxCount" type="_161" location="f0:301" file="f0" line="301"/>
+  </Function>
+  <Function id="_132" name="_strlwr_s" returns="_115" context="_1" location="f0:162" file="f0" line="162" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:162" file="f0" line="162"/>
+    <Argument name="_Size" type="_161" location="f0:162" file="f0" line="162"/>
+  </Function>
+  <Function id="_133" name="_strnset" returns="_65" context="_1" location="f0:191" file="f0" line="191" extern="1" attributes="__cdecl__">
+    <Argument name="_Dest" type="_65" location="f0:191" file="f0" line="191"/>
+    <Argument name="_Val" type="_114" location="f0:191" file="f0" line="191"/>
+    <Argument name="_Count" type="_161" location="f0:191" file="f0" line="191"/>
+  </Function>
+  <Function id="_134" name="_wcsnset_s" returns="_115" context="_1" location="f0:326" file="f0" line="326" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_259" location="f0:326" file="f0" line="326"/>
+    <Argument name="_SizeInWords" type="_161" location="f0:326" file="f0" line="326"/>
+    <Argument name="_Val" type="_260" location="f0:326" file="f0" line="326"/>
+    <Argument name="_MaxCount" type="_161" location="f0:326" file="f0" line="326"/>
+  </Function>
+  <PointerType id="_135" type="_45" size="32" align="32"/>
+  <Typedef id="_136" name="LPLC_ID" type="_135" context="_1" location="f3:1970" file="f3" line="1970"/>
+  <Struct id="_137" name="PreBoundAttribute" context="_93" mangled="N13vc_attributes17PreBoundAttributeE" demangled="vc_attributes::PreBoundAttribute" location="f4:170" file="f4" line="170" artificial="1" size="32" align="32" members="_338 _339 _340 _341 _342 " bases=""/>
+  <Typedef id="_138" name="SA_PreBound" type="_137" context="_1" location="f4:252" file="f4" line="252"/>
+  <Variable id="_139" name="SA_Read" type="_272c" init="Read" context="_1" location="f4:242" file="f4" line="242" static="1"/>
+  <Function id="_140" name="strtok_s" returns="_65" context="_1" location="f0:199" file="f0" line="199" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:199" file="f0" line="199"/>
+    <Argument name="_Delim" type="_261" location="f0:199" file="f0" line="199"/>
+    <Argument name="_Context" type="_343" location="f0:199" file="f0" line="199"/>
+  </Function>
+  <Function id="_141" name="_wcslwr_l" returns="_259" context="_1" location="f0:339" file="f0" line="339" extern="1" attributes="__cdecl__">
+    <Argument name="_String" type="_259" location="f0:339" file="f0" line="339"/>
+    <Argument name="_Locale" type="_54" location="f0:339" file="f0" line="339"/>
+  </Function>
+  <Function id="_142" name="_wcslwr_s" returns="_115" context="_1" location="f0:334" file="f0" line="334" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:334" file="f0" line="334"/>
+    <Argument name="_SizeInWords" type="_161" location="f0:334" file="f0" line="334"/>
+  </Function>
+  <Variable id="_143" name="SA_Yes" type="_270c" init="Yes" context="_1" location="f4:236" file="f4" line="236" static="1"/>
+  <Function id="_144" name="strrev" returns="_65" context="_1" location="f0:250" file="f0" line="250" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:250" file="f0" line="250"/>
+  </Function>
+  <Function id="_145" name="memset" returns="_262" context="_1" location="f0:88" file="f0" line="88" extern="1" attributes="nothrow __cdecl__ nonnull">
+    <Argument name="_Dst" type="_262" location="f0:88" file="f0" line="88"/>
+    <Argument name="_Val" type="_114" location="f0:88" file="f0" line="88"/>
+    <Argument name="_Size" type="_161" location="f0:88" file="f0" line="88"/>
+  </Function>
+  <Function id="_146" name="_aligned_realloc" returns="_262" context="_1" location="f1:115" file="f1" line="115" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:115" file="f1" line="115"/>
+    <Argument name="_NewSize" type="_161" location="f1:115" file="f1" line="115"/>
+    <Argument name="_Alignment" type="_161" location="f1:115" file="f1" line="115"/>
+  </Function>
+  <Function id="_147" name="wcstok_s" returns="_259" context="_1" location="f0:313" file="f0" line="313" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:313" file="f0" line="313"/>
+    <Argument name="_Delim" type="_264" location="f0:313" file="f0" line="313"/>
+    <Argument name="_Context" type="_344" location="f0:313" file="f0" line="313"/>
+  </Function>
+  <Function id="_148" name="_strxfrm_l" returns="_161" context="_1" location="f0:208" file="f0" line="208" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_65" location="f0:208" file="f0" line="208"/>
+    <Argument name="_Src" type="_261" location="f0:208" file="f0" line="208"/>
+    <Argument name="_MaxCount" type="_161" location="f0:208" file="f0" line="208"/>
+    <Argument name="_Locale" type="_54" location="f0:208" file="f0" line="208"/>
+  </Function>
+  <Function id="_149" name="_wcsupr" returns="_259" context="_1" location="f0:342" file="f0" line="342" extern="1" attributes="__cdecl__">
+    <Argument name="_String" type="_259" location="f0:342" file="f0" line="342"/>
+  </Function>
+  <Function id="_150" name="_aligned_msize" returns="_161" context="_1" location="f1:122" file="f1" line="122" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:122" file="f1" line="122"/>
+    <Argument name="_Alignment" type="_161" location="f1:122" file="f1" line="122"/>
+    <Argument name="_Offset" type="_161" location="f1:122" file="f1" line="122"/>
+  </Function>
+  <Typedef id="_151" name="uintptr_t" type="_29" context="_1" location="f5:48" file="f5" line="48"/>
+  <Function id="_152" name="_aligned_offset_recalloc" returns="_262" context="_1" location="f1:121" file="f1" line="121" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:121" file="f1" line="121"/>
+    <Argument name="_Count" type="_161" location="f1:121" file="f1" line="121"/>
+    <Argument name="_Size" type="_161" location="f1:121" file="f1" line="121"/>
+    <Argument name="_Alignment" type="_161" location="f1:121" file="f1" line="121"/>
+    <Argument name="_Offset" type="_161" location="f1:121" file="f1" line="121"/>
+  </Function>
+  <Function id="_153" name="_alloca" returns="_262" context="_1" location="f1:165" file="f1" line="165" extern="1" attributes="__cdecl__">
+    <Argument name="_Size" type="_161" location="f1:165" file="f1" line="165"/>
+  </Function>
+  <Function id="_154" name="_strerror_s" returns="_115" context="_1" location="f0:155" file="f0" line="155" extern="1" attributes="__cdecl__">
+    <Argument name="_Buf" type="_65" location="f0:155" file="f0" line="155"/>
+    <Argument name="_SizeInBytes" type="_161" location="f0:155" file="f0" line="155"/>
+    <Argument name="_ErrMsg" type="_261" location="f0:155" file="f0" line="155"/>
+  </Function>
+  <Function id="_155" name="malloc" returns="_262" context="_1" location="f1:106" file="f1" line="106" extern="1" attributes="nothrow malloc __cdecl__">
+    <Argument name="_Size" type="_161" location="f1:106" file="f1" line="106"/>
+  </Function>
+  <Function id="_156" name="_memccpy" returns="_262" context="_1" location="f0:46" file="f0" line="46" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_262" location="f0:46" file="f0" line="46"/>
+    <Argument name="_Src" type="_318" location="f0:46" file="f0" line="46"/>
+    <Argument name="_Val" type="_114" location="f0:46" file="f0" line="46"/>
+    <Argument name="_MaxCount" type="_161" location="f0:46" file="f0" line="46"/>
+  </Function>
+  <Function id="_157" name="_strupr_s_l" returns="_115" context="_1" location="f0:204" file="f0" line="204" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:204" file="f0" line="204"/>
+    <Argument name="_Size" type="_161" location="f0:204" file="f0" line="204"/>
+    <Argument name="_Locale" type="_54" location="f0:204" file="f0" line="204"/>
+  </Function>
+  <Function id="_158" name="_wcserror_s" returns="_115" context="_1" location="f0:316" file="f0" line="316" extern="1" attributes="__cdecl__">
+    <Argument name="_Buf" type="_259" location="f0:316" file="f0" line="316"/>
+    <Argument name="_SizeInWords" type="_161" location="f0:316" file="f0" line="316"/>
+    <Argument name="_ErrNum" type="_114" location="f0:316" file="f0" line="316"/>
+  </Function>
+  <Function id="_159" name="strcoll" returns="_114" context="_1" location="f0:145" file="f0" line="145" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:145" file="f0" line="145"/>
+    <Argument name="_Str2" type="_261" location="f0:145" file="f0" line="145"/>
+  </Function>
+  <Typedef id="_160" name="intptr_t" type="_114" context="_1" location="f3:418" file="f3" line="418"/>
+  <Typedef id="_161" name="size_t" type="_29" context="_1" location="f4:29" file="f4" line="29"/>
+  <Function id="_162" name="_heapwalk" returns="_114" context="_1" location="f1:170" file="f1" line="170" extern="1" attributes="__cdecl__">
+    <Argument name="_EntryInfo" type="_345" location="f1:170" file="f1" line="170"/>
+  </Function>
+  <Struct id="_163" name="threadlocaleinfostruct" context="_1" mangled="22threadlocaleinfostruct" demangled="threadlocaleinfostruct" location="f3:1975" file="f3" line="1975" artificial="1" size="1728" align="32" members="_346 _347 _348 _349 _350 _351 _352 _353 _354 _355 _356 _357 _358 _359 _360 _361 _362 _363 _364 _365 _366 _367 _368 " bases=""/>
+  <Typedef id="_164" name="threadlocinfo" type="_163" context="_1" location="f3:1999" file="f3" line="1999"/>
+  <FundamentalType id="_165" name="long int" size="32" align="32"/>
+  <Typedef id="_166" name="__time32_t" type="_165" context="_1" location="f3:473" file="f3" line="473"/>
+  <Function id="_167" name="_strnicoll" returns="_114" context="_1" location="f0:151" file="f0" line="151" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:151" file="f0" line="151"/>
+    <Argument name="_Str2" type="_261" location="f0:151" file="f0" line="151"/>
+    <Argument name="_MaxCount" type="_161" location="f0:151" file="f0" line="151"/>
+  </Function>
+  <Struct id="_168" name="PostAttribute" context="_93" mangled="N13vc_attributes13PostAttributeE" demangled="vc_attributes::PostAttribute" location="f4:110" file="f4" line="110" artificial="1" size="704" align="32" members="_369 _370 _371 _372 _373 _374 _375 _376 _377 _378 _379 _380 _381 _382 _383 _384 _385 _386 _387 _388 _389 _390 _391 _392 _393 _394 " bases=""/>
+  <Typedef id="_169" name="SA_Post" type="_168" context="_1" location="f4:248" file="f4" line="248"/>
+  <Function id="_170" name="calloc" returns="_262" context="_1" location="f1:104" file="f1" line="104" extern="1" attributes="nothrow malloc __cdecl__">
+    <Argument name="_Count" type="_161" location="f1:104" file="f1" line="104"/>
+    <Argument name="_Size" type="_161" location="f1:104" file="f1" line="104"/>
+  </Function>
+  <Function id="_171" name="_aligned_malloc" returns="_262" context="_1" location="f1:112" file="f1" line="112" extern="1" attributes="__cdecl__">
+    <Argument name="_Size" type="_161" location="f1:112" file="f1" line="112"/>
+    <Argument name="_Alignment" type="_161" location="f1:112" file="f1" line="112"/>
+  </Function>
+  <PointerType id="_172" type="_163" size="32" align="32"/>
+  <Typedef id="_173" name="pthreadlocinfo" type="_172" context="_1" location="f3:1955" file="f3" line="1955"/>
+  <Function id="_174" name="_heapchk" returns="_114" context="_1" location="f1:167" file="f1" line="167" extern="1" attributes="__cdecl__"/>
+  <Struct id="_175" name="PreRangeAttribute" context="_93" mangled="N13vc_attributes17PreRangeAttributeE" demangled="vc_attributes::PreRangeAttribute" location="f4:188" file="f4" line="188" artificial="1" size="96" align="32" members="_395 _396 _397 _398 _399 _400 _401 " bases=""/>
+  <Typedef id="_176" name="SA_PreRange" type="_175" context="_1" location="f4:254" file="f4" line="254"/>
+  <Struct id="_177" name="__lc_time_data" context="_1" incomplete="1" mangled="14__lc_time_data" demangled="__lc_time_data" location="f3:1957" file="f3" line="1957" artificial="1" align="8"/>
+  <Function id="_178" name="strrchr" returns="_65" context="_1" mangled="_Z7strrchrPci" demangled="strrchr(char*, int)" location="f0:218" file="f0" line="218" endline="219" inline="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:218" file="f0" line="218"/>
+    <Argument name="_Ch" type="_114" location="f0:218" file="f0" line="218"/>
+  </Function>
+  <Function id="_179" name="strrchr" returns="_261" context="_1" location="f0:193" file="f0" line="193" extern="1" attributes="nothrow pure __cdecl__">
+    <Argument name="_Str" type="_261" location="f0:193" file="f0" line="193"/>
+    <Argument name="_Ch" type="_114" location="f0:193" file="f0" line="193"/>
+  </Function>
+  <Function id="_180" name="_invalid_parameter_noinfo_noreturn" returns="_271" context="_1" location="f3:546" file="f3" line="546" extern="1" attributes="noreturn __cdecl__"/>
+  <Function id="_181" name="strxfrm" returns="_161" context="_1" location="f0:207" file="f0" line="207" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_65" location="f0:207" file="f0" line="207"/>
+    <Argument name="_Src" type="_261" location="f0:207" file="f0" line="207"/>
+    <Argument name="_MaxCount" type="_161" location="f0:207" file="f0" line="207"/>
+  </Function>
+  <Function id="_182" name="strerror" returns="_65" context="_1" location="f0:157" file="f0" line="157" extern="1" attributes="__cdecl__">
+    <Argument type="_114" location="f0:157" file="f0" line="157"/>
+  </Function>
+  <Function id="_183" name="_invoke_watson" returns="_271" context="_1" location="f3:550" file="f3" line="550" extern="1" attributes="noreturn __cdecl__">
+    <Argument type="_264" location="f3:550" file="f3" line="550"/>
+    <Argument type="_264" location="f3:550" file="f3" line="550"/>
+    <Argument type="_264" location="f3:550" file="f3" line="550"/>
+    <Argument type="_29" location="f3:550" file="f3" line="550"/>
+    <Argument type="_151" location="f3:550" file="f3" line="550"/>
+  </Function>
+  <Function id="_184" name="strnlen" returns="_161" context="_1" location="f0:113" file="f0" line="113" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_261" location="f0:113" file="f0" line="113"/>
+    <Argument name="_MaxCount" type="_161" location="f0:113" file="f0" line="113"/>
+  </Function>
+  <Function id="_185" name="strnicmp" returns="_114" context="_1" location="f0:248" file="f0" line="248" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:248" file="f0" line="248"/>
+    <Argument name="_Str" type="_261" location="f0:248" file="f0" line="248"/>
+    <Argument name="_MaxCount" type="_161" location="f0:248" file="f0" line="248"/>
+  </Function>
+  <Function id="_186" name="wcsicmp" returns="_114" context="_1" location="f0:390" file="f0" line="390" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:390" file="f0" line="390"/>
+    <Argument name="_Str2" type="_264" location="f0:390" file="f0" line="390"/>
+  </Function>
+  <Function id="_187" name="_wcsrev" returns="_259" context="_1" location="f0:329" file="f0" line="329" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:329" file="f0" line="329"/>
+  </Function>
+  <Function id="_188" name="strpbrk" returns="_65" context="_1" mangled="_Z7strpbrkPcPKc" demangled="strpbrk(char*, char const*)" location="f0:216" file="f0" line="216" endline="217" inline="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:216" file="f0" line="216"/>
+    <Argument name="_Control" type="_261" location="f0:216" file="f0" line="216"/>
+  </Function>
+  <Function id="_189" name="strpbrk" returns="_261" context="_1" location="f0:192" file="f0" line="192" extern="1" attributes="nothrow pure __cdecl__">
+    <Argument name="_Str" type="_261" location="f0:192" file="f0" line="192"/>
+    <Argument name="_Control" type="_261" location="f0:192" file="f0" line="192"/>
+  </Function>
+  <Function id="_190" name="_strrev" returns="_65" context="_1" location="f0:194" file="f0" line="194" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:194" file="f0" line="194"/>
+  </Function>
+  <Function id="_191" name="strcspn" returns="_161" context="_1" location="f0:153" file="f0" line="153" extern="1" attributes="nothrow pure __cdecl__ nonnull">
+    <Argument name="_Str" type="_261" location="f0:153" file="f0" line="153"/>
+    <Argument name="_Control" type="_261" location="f0:153" file="f0" line="153"/>
+  </Function>
+  <Function id="_192" name="HTfindKey" returns="_65" context="_1" mangled="_Z9HTfindKeyPP7HTentryPc" demangled="HTfindKey(HTentry**, char*)" location="f2:87" file="f2" line="87" endline="98">
+    <Argument name="ht" type="_263" location="f2:87" file="f2" line="87"/>
+    <Argument name="key" type="_65" location="f2:87" file="f2" line="87"/>
+  </Function>
+  <Function id="_193" name="wcsnicmp" returns="_114" context="_1" location="f0:391" file="f0" line="391" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:391" file="f0" line="391"/>
+    <Argument name="_Str2" type="_264" location="f0:391" file="f0" line="391"/>
+    <Argument name="_MaxCount" type="_161" location="f0:391" file="f0" line="391"/>
+  </Function>
+  <Function id="_194" name="strcmpi" returns="_114" context="_1" location="f0:245" file="f0" line="245" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:245" file="f0" line="245"/>
+    <Argument name="_Str2" type="_261" location="f0:245" file="f0" line="245"/>
+  </Function>
+  <Function id="_195" name="_memicmp" returns="_114" context="_1" location="f0:48" file="f0" line="48" extern="1" attributes="__cdecl__">
+    <Argument name="_Buf1" type="_318" location="f0:48" file="f0" line="48"/>
+    <Argument name="_Buf2" type="_318" location="f0:48" file="f0" line="48"/>
+    <Argument name="_Size" type="_161" location="f0:48" file="f0" line="48"/>
+  </Function>
+  <Function id="_196" name="_expand" returns="_262" context="_1" location="f1:157" file="f1" line="157" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:157" file="f1" line="157"/>
+    <Argument name="_NewSize" type="_161" location="f1:157" file="f1" line="157"/>
+  </Function>
+  <Function id="_197" name="HTcreate" returns="_263" context="_1" mangled="_Z8HTcreatev" demangled="HTcreate()" location="f2:51" file="f2" line="51" endline="56"/>
+  <Function id="_198" name="wcsdup" returns="_259" context="_1" location="f0:380" file="f0" line="380" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_264" location="f0:380" file="f0" line="380"/>
+  </Function>
+  <Function id="_199" name="wcsncat_s" returns="_115" context="_1" location="f0:294" file="f0" line="294" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_259" location="f0:294" file="f0" line="294"/>
+    <Argument name="_SizeInWords" type="_30" location="f0:294" file="f0" line="294"/>
+    <Argument name="_Src" type="_264" location="f0:294" file="f0" line="294"/>
+    <Argument name="_MaxCount" type="_30" location="f0:294" file="f0" line="294"/>
+  </Function>
+  <Function id="_200" name="_stricmp" returns="_114" context="_1" location="f0:142" file="f0" line="142" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:142" file="f0" line="142"/>
+    <Argument name="_Str2" type="_261" location="f0:142" file="f0" line="142"/>
+  </Function>
+  <Function id="_201" name="strdup" returns="_65" context="_1" location="f0:238" file="f0" line="238" extern="1" attributes="nothrow malloc __cdecl__ nonnull">
+    <Argument name="_Src" type="_261" location="f0:238" file="f0" line="238"/>
+  </Function>
+  <Function id="_202" name="memcmp" returns="_114" context="_1" location="f0:50" file="f0" line="50" extern="1" attributes="nothrow pure __cdecl__ nonnull">
+    <Argument name="_Buf1" type="_318" location="f0:50" file="f0" line="50"/>
+    <Argument name="_Buf2" type="_318" location="f0:50" file="f0" line="50"/>
+    <Argument name="_Size" type="_161" location="f0:50" file="f0" line="50"/>
+  </Function>
+  <Function id="_203" name="stricmp" returns="_114" context="_1" location="f0:246" file="f0" line="246" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:246" file="f0" line="246"/>
+    <Argument name="_Str2" type="_261" location="f0:246" file="f0" line="246"/>
+  </Function>
+  <Enumeration id="_204" name="AccessType" context="_93" location="f4:66" file="f4" line="66" artificial="1" size="32" align="32">
+    <EnumValue name="NoAccess" init="0"/>
+    <EnumValue name="Read" init="1"/>
+    <EnumValue name="Write" init="2"/>
+    <EnumValue name="ReadWrite" init="3"/>
+  </Enumeration>
+  <Typedef id="_205" name="SA_AccessType" type="_272" context="_1" location="f4:240" file="f4" line="240"/>
+  <Function id="_206" name="_strnicmp_l" returns="_114" context="_1" location="f0:183" file="f0" line="183" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:183" file="f0" line="183"/>
+    <Argument name="_Str2" type="_261" location="f0:183" file="f0" line="183"/>
+    <Argument name="_MaxCount" type="_161" location="f0:183" file="f0" line="183"/>
+    <Argument name="_Locale" type="_54" location="f0:183" file="f0" line="183"/>
+  </Function>
+  <Function id="_207" name="_stricoll_l" returns="_114" context="_1" location="f0:148" file="f0" line="148" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:148" file="f0" line="148"/>
+    <Argument name="_Str2" type="_261" location="f0:148" file="f0" line="148"/>
+    <Argument name="_Locale" type="_54" location="f0:148" file="f0" line="148"/>
+  </Function>
+  <Struct id="_208" name="lconv" context="_1" incomplete="1" mangled="5lconv" demangled="lconv" location="f3:1992" file="f3" line="1992" artificial="1" align="8"/>
+  <PointerType id="_209" type="_257" size="32" align="32"/>
+  <Typedef id="_210" name="HTtable" type="_209" context="_1" location="f6:17" file="f6" line="17"/>
+  <Function id="_211" name="wcsset" returns="_259" context="_1" location="f0:394" file="f0" line="394" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:394" file="f0" line="394"/>
+    <Argument name="_Val" type="_260" location="f0:394" file="f0" line="394"/>
+  </Function>
+  <Function id="_212" name="wcsrev" returns="_259" context="_1" location="f0:393" file="f0" line="393" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:393" file="f0" line="393"/>
+  </Function>
+  <Function id="_213" name="_stricoll" returns="_114" context="_1" location="f0:147" file="f0" line="147" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:147" file="f0" line="147"/>
+    <Argument name="_Str2" type="_261" location="f0:147" file="f0" line="147"/>
+  </Function>
+  <Function id="_214" name="_heapused" returns="_161" context="_1" location="f1:171" file="f1" line="171" extern="1" attributes="__cdecl__">
+    <Argument name="_Used" type="_402" location="f1:171" file="f1" line="171"/>
+    <Argument name="_Commit" type="_402" location="f1:171" file="f1" line="171"/>
+  </Function>
+  <Function id="_215" name="strset" returns="_65" context="_1" location="f0:251" file="f0" line="251" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:251" file="f0" line="251"/>
+    <Argument name="_Val" type="_114" location="f0:251" file="f0" line="251"/>
+  </Function>
+  <Function id="_216" name="_strlwr" returns="_65" context="_1" location="f0:164" file="f0" line="164" extern="1" attributes="__cdecl__">
+    <Argument name="_String" type="_65" location="f0:164" file="f0" line="164"/>
+  </Function>
+  <Function id="_217" name="__wcserror" returns="_259" context="_1" location="f0:318" file="f0" line="318" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_264" location="f0:318" file="f0" line="318"/>
+  </Function>
+  <Typedef id="_218" name="wint_t" type="_11" context="_1" location="f3:447" file="f3" line="447"/>
+  <Function id="_219" name="_wcsicoll" returns="_114" context="_1" location="f0:350" file="f0" line="350" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:350" file="f0" line="350"/>
+    <Argument name="_Str2" type="_264" location="f0:350" file="f0" line="350"/>
+  </Function>
+  <Function id="_220" name="wcsspn" returns="_161" context="_1" location="f0:309" file="f0" line="309" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_264" location="f0:309" file="f0" line="309"/>
+    <Argument name="_Control" type="_264" location="f0:309" file="f0" line="309"/>
+  </Function>
+  <Function id="_221" name="wcsnset" returns="_259" context="_1" location="f0:392" file="f0" line="392" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:392" file="f0" line="392"/>
+    <Argument name="_Val" type="_260" location="f0:392" file="f0" line="392"/>
+    <Argument name="_MaxCount" type="_161" location="f0:392" file="f0" line="392"/>
+  </Function>
+  <Function id="_222" name="wcscoll" returns="_114" context="_1" location="f0:348" file="f0" line="348" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:348" file="f0" line="348"/>
+    <Argument name="_Str2" type="_264" location="f0:348" file="f0" line="348"/>
+  </Function>
+  <Function id="_223" name="strspn" returns="_161" context="_1" location="f0:195" file="f0" line="195" extern="1" attributes="nothrow pure __cdecl__ nonnull">
+    <Argument name="_Str" type="_261" location="f0:195" file="f0" line="195"/>
+    <Argument name="_Control" type="_261" location="f0:195" file="f0" line="195"/>
+  </Function>
+  <Function id="_224" name="_set_malloc_crt_max_wait" returns="_403" context="_1" location="f1:146" file="f1" line="146" extern="1" attributes="__cdecl__">
+    <Argument name="_NewValue" type="_403" location="f1:146" file="f1" line="146"/>
+  </Function>
+  <Function id="_225" name="wcsstr" returns="_259" context="_1" mangled="_Z6wcsstrPwPKw" demangled="wcsstr(wchar_t*, wchar_t const*)" location="f0:367" file="f0" line="367" endline="368" inline="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:367" file="f0" line="367"/>
+    <Argument name="_SubStr" type="_264" location="f0:367" file="f0" line="367"/>
+  </Function>
+  <Function id="_226" name="wcsstr" returns="_264" context="_1" location="f0:310" file="f0" line="310" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_264" location="f0:310" file="f0" line="310"/>
+    <Argument name="_SubStr" type="_264" location="f0:310" file="f0" line="310"/>
+  </Function>
+  <Function id="_227" name="_strncoll_l" returns="_114" context="_1" location="f0:150" file="f0" line="150" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_261" location="f0:150" file="f0" line="150"/>
+    <Argument name="_Str2" type="_261" location="f0:150" file="f0" line="150"/>
+    <Argument name="_MaxCount" type="_161" location="f0:150" file="f0" line="150"/>
+    <Argument name="_Locale" type="_54" location="f0:150" file="f0" line="150"/>
+  </Function>
+  <PointerType id="_228" type="_246" size="32" align="32"/>
+  <Typedef id="_229" name="pthreadmbcinfo" type="_228" context="_1" location="f3:1956" file="f3" line="1956"/>
+  <Function id="_230" name="_wcsset_s" returns="_115" context="_1" location="f0:330" file="f0" line="330" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_259" location="f0:330" file="f0" line="330"/>
+    <Argument name="_SizeInWords" type="_161" location="f0:330" file="f0" line="330"/>
+    <Argument name="_Value" type="_260" location="f0:330" file="f0" line="330"/>
+  </Function>
+  <Function id="_231" name="strstr" returns="_65" context="_1" mangled="_Z6strstrPcPKc" demangled="strstr(char*, char const*)" location="f0:220" file="f0" line="220" endline="221" inline="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:220" file="f0" line="220"/>
+    <Argument name="_SubStr" type="_261" location="f0:220" file="f0" line="220"/>
+  </Function>
+  <Function id="_232" name="strstr" returns="_261" context="_1" location="f0:196" file="f0" line="196" extern="1" attributes="nothrow pure __cdecl__">
+    <Argument name="_Str" type="_261" location="f0:196" file="f0" line="196"/>
+    <Argument name="_SubStr" type="_261" location="f0:196" file="f0" line="196"/>
+  </Function>
+  <Function id="_233" name="_strlwr_s_l" returns="_115" context="_1" location="f0:165" file="f0" line="165" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:165" file="f0" line="165"/>
+    <Argument name="_Size" type="_161" location="f0:165" file="f0" line="165"/>
+    <Argument name="_Locale" type="_54" location="f0:165" file="f0" line="165"/>
+  </Function>
+  <Function id="_234" name="wcsnlen_s" returns="_161" static="1" context="_1" location="f0:288" file="f0" line="288" endline="290" inline="1" attributes="__cdecl__">
+    <Argument name="_Src" type="_264" location="f0:288" file="f0" line="288"/>
+    <Argument name="_MaxCount" type="_161" location="f0:288" file="f0" line="288"/>
+  </Function>
+  <Function id="_235" name="wcslen" returns="_161" context="_1" location="f0:285" file="f0" line="285" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_264" location="f0:285" file="f0" line="285"/>
+  </Function>
+  <Function id="_236" name="strlen" returns="_161" context="_1" location="f0:112" file="f0" line="112" extern="1" attributes="nothrow pure __cdecl__ nonnull">
+    <Argument name="_Str" type="_261" location="f0:112" file="f0" line="112"/>
+  </Function>
+  <Function id="_237" name="_aligned_recalloc" returns="_262" context="_1" location="f1:117" file="f1" line="117" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:117" file="f1" line="117"/>
+    <Argument name="_Count" type="_161" location="f1:117" file="f1" line="117"/>
+    <Argument name="_Size" type="_161" location="f1:117" file="f1" line="117"/>
+    <Argument name="_Alignment" type="_161" location="f1:117" file="f1" line="117"/>
+  </Function>
+  <Function id="_238" name="wcsrchr" returns="_259" context="_1" mangled="_Z7wcsrchrPww" demangled="wcsrchr(wchar_t*, wchar_t)" location="f0:365" file="f0" line="365" endline="366" inline="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:365" file="f0" line="365"/>
+    <Argument name="_Ch" type="_260" location="f0:365" file="f0" line="365"/>
+  </Function>
+  <Function id="_239" name="wcsrchr" returns="_264" context="_1" location="f0:308" file="f0" line="308" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_264" location="f0:308" file="f0" line="308"/>
+    <Argument name="_Ch" type="_260" location="f0:308" file="f0" line="308"/>
+  </Function>
+  <Struct id="_240" name="PostRangeAttribute" context="_93" mangled="N13vc_attributes18PostRangeAttributeE" demangled="vc_attributes::PostRangeAttribute" location="f4:199" file="f4" line="199" artificial="1" size="96" align="32" members="_404 _405 _406 _407 _408 _409 _410 " bases=""/>
+  <Typedef id="_241" name="SA_PostRange" type="_240" context="_1" location="f4:255" file="f4" line="255"/>
+  <Function id="_242" name="strncpy_s" returns="_115" context="_1" location="f0:185" file="f0" line="185" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_65" location="f0:185" file="f0" line="185"/>
+    <Argument name="_SizeInBytes" type="_30" location="f0:185" file="f0" line="185"/>
+    <Argument name="_Src" type="_261" location="f0:185" file="f0" line="185"/>
+    <Argument name="_MaxCount" type="_30" location="f0:185" file="f0" line="185"/>
+  </Function>
+  <Function id="_243" name="_strupr" returns="_65" context="_1" location="f0:203" file="f0" line="203" extern="1" attributes="__cdecl__">
+    <Argument name="_String" type="_65" location="f0:203" file="f0" line="203"/>
+  </Function>
+  <Function id="_244" name="_msize" returns="_161" context="_1" location="f1:158" file="f1" line="158" extern="1" attributes="__cdecl__">
+    <Argument name="_Memory" type="_262" location="f1:158" file="f1" line="158"/>
+  </Function>
+  <Function id="_245" name="_strnset_s" returns="_115" context="_1" location="f0:189" file="f0" line="189" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:189" file="f0" line="189"/>
+    <Argument name="_SizeInBytes" type="_161" location="f0:189" file="f0" line="189"/>
+    <Argument name="_Val" type="_114" location="f0:189" file="f0" line="189"/>
+    <Argument name="_MaxCount" type="_161" location="f0:189" file="f0" line="189"/>
+  </Function>
+  <Struct id="_246" name="threadmbcinfostruct" context="_1" incomplete="1" mangled="19threadmbcinfostruct" demangled="threadmbcinfostruct" location="f3:1954" file="f3" line="1954" artificial="1" align="8"/>
+  <Function id="_247" name="_wcsdup" returns="_259" context="_1" location="f0:266" file="f0" line="266" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_264" location="f0:266" file="f0" line="266"/>
+  </Function>
+  <ArrayType id="_248" min="0" max="0u" type="_325" size="8" align="8"/>
+  <Typedef id="_249" name="__static_assert_t" type="_248" context="_1" location="f1:187" file="f1" line="187"/>
+  <Function id="_250" name="_strdup" returns="_65" context="_1" location="f0:135" file="f0" line="135" extern="1" attributes="__cdecl__">
+    <Argument name="_Src" type="_261" location="f0:135" file="f0" line="135"/>
+  </Function>
+  <Function id="_251" name="_wcsicmp_l" returns="_114" context="_1" location="f0:323" file="f0" line="323" extern="1" attributes="__cdecl__">
+    <Argument name="_Str1" type="_264" location="f0:323" file="f0" line="323"/>
+    <Argument name="_Str2" type="_264" location="f0:323" file="f0" line="323"/>
+    <Argument name="_Locale" type="_54" location="f0:323" file="f0" line="323"/>
+  </Function>
+  <Function id="_252" name="wcslwr" returns="_259" context="_1" location="f0:395" file="f0" line="395" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_259" location="f0:395" file="f0" line="395"/>
+  </Function>
+  <Variable id="_253" name="SA_No" type="_270c" init="No" context="_1" location="f4:237" file="f4" line="237" static="1"/>
+  <Function id="_254" name="wcscspn" returns="_161" context="_1" location="f0:284" file="f0" line="284" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_264" location="f0:284" file="f0" line="284"/>
+    <Argument name="_Control" type="_264" location="f0:284" file="f0" line="284"/>
+  </Function>
+  <Function id="_255" name="strlwr" returns="_65" context="_1" location="f0:247" file="f0" line="247" extern="1" attributes="__cdecl__">
+    <Argument name="_Str" type="_65" location="f0:247" file="f0" line="247"/>
+  </Function>
+  <Function id="_256" name="strcpy_s" returns="_115" context="_1" location="f0:102" file="f0" line="102" extern="1" attributes="__cdecl__">
+    <Argument name="_Dst" type="_65" location="f0:102" file="f0" line="102"/>
+    <Argument name="_SizeInBytes" type="_30" location="f0:102" file="f0" line="102"/>
+    <Argument name="_Src" type="_261" location="f0:102" file="f0" line="102"/>
+  </Function>
+  <Struct id="_257" name="HTentry" context="_1" mangled="7HTentry" demangled="HTentry" location="f6:11" file="f6" line="11" artificial="1" size="96" align="32" members="_411 _412 _413 _414 _415 _416 _417 " bases=""/>
+  <Function id="_258" name="samestr" returns="_114" context="_1" mangled="_Z7samestrPcS_" demangled="samestr(char*, char*)" location="f2:24" file="f2" line="24" endline="29">
+    <Argument name="s1" type="_65" location="f2:24" file="f2" line="24"/>
+    <Argument name="s2" type="_65" location="f2:24" file="f2" line="24"/>
+  </Function>
+  <PointerType id="_259" type="_260" size="32" align="32"/>
+  <FundamentalType id="_260" name="wchar_t" size="16" align="16"/>
+  <PointerType id="_261" type="_325c" size="32" align="32"/>
+  <PointerType id="_262" type="_271" size="32" align="32"/>
+  <PointerType id="_263" type="_210" size="32" align="32"/>
+  <PointerType id="_264" type="_260c" size="32" align="32"/>
+  <Field id="_265" name="Deref" type="_29" offset="0" context="_15" access="public" location="f4:183" file="f4" line="183"/>
+  <Destructor id="_266" name="PostBoundAttribute" artificial="1" throw="" context="_15" access="public" mangled="_ZN13vc_attributes18PostBoundAttributeD1Ev *INTERNAL* " demangled="vc_attributes::PostBoundAttribute::~PostBoundAttribute()" location="f4:179" file="f4" line="179" endline="179" inline="1">
+  </Destructor>
+  <OperatorMethod id="_267" name="=" returns="_420" artificial="1" throw="" context="_15" access="public" mangled="_ZN13vc_attributes18PostBoundAttributeaSERKS0_" demangled="vc_attributes::PostBoundAttribute::operator=(vc_attributes::PostBoundAttribute const&)" location="f4:179" file="f4" line="179" endline="179" inline="1">
+    <Argument type="_421" location="f4:179" file="f4" line="179"/>
+  </OperatorMethod>
+  <Constructor id="_268" name="PostBoundAttribute" artificial="1" throw="" context="_15" access="public" mangled="_ZN13vc_attributes18PostBoundAttributeC1ERKS0_ *INTERNAL* " demangled="vc_attributes::PostBoundAttribute::PostBoundAttribute(vc_attributes::PostBoundAttribute const&)" location="f4:179" file="f4" line="179" endline="179" inline="1">
+    <Argument type="_421" location="f4:179" file="f4" line="179"/>
+  </Constructor>
+  <Constructor id="_269" name="PostBoundAttribute" explicit="1" context="_15" access="public" mangled="_ZN13vc_attributes18PostBoundAttributeC1Ev *INTERNAL* " demangled="vc_attributes::PostBoundAttribute::PostBoundAttribute()" location="f4:181" file="f4" line="181" extern="1"/>
+  <Typedef id="_270" name="YesNoMaybe" type="_22" context="_93" location="f4:64" file="f4" line="64"/>
+  <FundamentalType id="_271" name="void" align="8"/>
+  <Typedef id="_272" name="AccessType" type="_204" context="_93" location="f4:74" file="f4" line="74"/>
+  <CvQualifiedType id="_272c" type="_272" const="1"/>
+  <Field id="_274" name="Deref" type="_29" offset="0" context="_35" access="public" location="f4:85" file="f4" line="85"/>
+  <Field id="_275" name="Valid" type="_270" offset="32" context="_35" access="public" location="f4:86" file="f4" line="86"/>
+  <Field id="_276" name="Null" type="_270" offset="64" context="_35" access="public" location="f4:87" file="f4" line="87"/>
+  <Field id="_277" name="Tainted" type="_270" offset="96" context="_35" access="public" location="f4:88" file="f4" line="88"/>
+  <Field id="_278" name="Access" type="_272" offset="128" context="_35" access="public" location="f4:89" file="f4" line="89"/>
+  <Field id="_279" name="ValidElementsConst" type="_161" offset="160" context="_35" access="public" location="f4:90" file="f4" line="90"/>
+  <Field id="_280" name="ValidBytesConst" type="_161" offset="192" context="_35" access="public" location="f4:91" file="f4" line="91"/>
+  <Field id="_281" name="ValidElements" type="_264" offset="224" context="_35" access="public" location="f4:92" file="f4" line="92"/>
+  <Field id="_282" name="ValidBytes" type="_264" offset="256" context="_35" access="public" location="f4:93" file="f4" line="93"/>
+  <Field id="_283" name="ValidElementsLength" type="_264" offset="288" context="_35" access="public" location="f4:94" file="f4" line="94"/>
+  <Field id="_284" name="ValidBytesLength" type="_264" offset="320" context="_35" access="public" location="f4:95" file="f4" line="95"/>
+  <Field id="_285" name="WritableElementsConst" type="_161" offset="352" context="_35" access="public" location="f4:96" file="f4" line="96"/>
+  <Field id="_286" name="WritableBytesConst" type="_161" offset="384" context="_35" access="public" location="f4:97" file="f4" line="97"/>
+  <Field id="_287" name="WritableElements" type="_264" offset="416" context="_35" access="public" location="f4:98" file="f4" line="98"/>
+  <Field id="_288" name="WritableBytes" type="_264" offset="448" context="_35" access="public" location="f4:99" file="f4" line="99"/>
+  <Field id="_289" name="WritableElementsLength" type="_264" offset="480" context="_35" access="public" location="f4:100" file="f4" line="100"/>
+  <Field id="_290" name="WritableBytesLength" type="_264" offset="512" context="_35" access="public" location="f4:101" file="f4" line="101"/>
+  <Field id="_291" name="ElementSizeConst" type="_161" offset="544" context="_35" access="public" location="f4:102" file="f4" line="102"/>
+  <Field id="_292" name="ElementSize" type="_264" offset="576" context="_35" access="public" location="f4:103" file="f4" line="103"/>
+  <Field id="_293" name="NullTerminated" type="_270" offset="608" context="_35" access="public" location="f4:104" file="f4" line="104"/>
+  <Field id="_294" name="Condition" type="_264" offset="640" context="_35" access="public" location="f4:105" file="f4" line="105"/>
+  <Destructor id="_295" name="PreAttribute" artificial="1" throw="" context="_35" access="public" mangled="_ZN13vc_attributes12PreAttributeD1Ev *INTERNAL* " demangled="vc_attributes::PreAttribute::~PreAttribute()" location="f4:80" file="f4" line="80" endline="80" inline="1">
+  </Destructor>
+  <OperatorMethod id="_296" name="=" returns="_422" artificial="1" throw="" context="_35" access="public" mangled="_ZN13vc_attributes12PreAttributeaSERKS0_" demangled="vc_attributes::PreAttribute::operator=(vc_attributes::PreAttribute const&)" location="f4:80" file="f4" line="80" endline="80" inline="1">
+    <Argument type="_423" location="f4:80" file="f4" line="80"/>
+  </OperatorMethod>
+  <Constructor id="_297" name="PreAttribute" artificial="1" throw="" context="_35" access="public" mangled="_ZN13vc_attributes12PreAttributeC1ERKS0_ *INTERNAL* " demangled="vc_attributes::PreAttribute::PreAttribute(vc_attributes::PreAttribute const&)" location="f4:80" file="f4" line="80" endline="80" inline="1">
+    <Argument type="_423" location="f4:80" file="f4" line="80"/>
+  </Constructor>
+  <Constructor id="_298" name="PreAttribute" explicit="1" context="_35" access="public" mangled="_ZN13vc_attributes12PreAttributeC1Ev *INTERNAL* " demangled="vc_attributes::PreAttribute::PreAttribute()" location="f4:82" file="f4" line="82" extern="1"/>
+  <Field id="_299" name="Condition" type="_264" offset="0" context="_40" access="public" location="f4:165" file="f4" line="165"/>
+  <Destructor id="_300" name="SuccessAttribute" artificial="1" throw="" context="_40" access="public" mangled="_ZN13vc_attributes16SuccessAttributeD1Ev *INTERNAL* " demangled="vc_attributes::SuccessAttribute::~SuccessAttribute()" location="f4:160" file="f4" line="160" endline="160" inline="1">
+  </Destructor>
+  <OperatorMethod id="_301" name="=" returns="_424" artificial="1" throw="" context="_40" access="public" mangled="_ZN13vc_attributes16SuccessAttributeaSERKS0_" demangled="vc_attributes::SuccessAttribute::operator=(vc_attributes::SuccessAttribute const&)" location="f4:160" file="f4" line="160" endline="160" inline="1">
+    <Argument type="_425" location="f4:160" file="f4" line="160"/>
+  </OperatorMethod>
+  <Constructor id="_302" name="SuccessAttribute" artificial="1" throw="" context="_40" access="public" mangled="_ZN13vc_attributes16SuccessAttributeC1ERKS0_ *INTERNAL* " demangled="vc_attributes::SuccessAttribute::SuccessAttribute(vc_attributes::SuccessAttribute const&)" location="f4:160" file="f4" line="160" endline="160" inline="1">
+    <Argument type="_425" location="f4:160" file="f4" line="160"/>
+  </Constructor>
+  <Constructor id="_303" name="SuccessAttribute" explicit="1" context="_40" access="public" mangled="_ZN13vc_attributes16SuccessAttributeC1Ev *INTERNAL* " demangled="vc_attributes::SuccessAttribute::SuccessAttribute()" location="f4:162" file="f4" line="162" extern="1"/>
+  <Field id="_304" name="_pentry" type="_426" offset="0" context="_44" access="public" location="f1:59" file="f1" line="59"/>
+  <Field id="_305" name="_size" type="_161" offset="32" context="_44" access="public" location="f1:60" file="f1" line="60"/>
+  <Field id="_306" name="_useflag" type="_114" offset="64" context="_44" access="public" location="f1:61" file="f1" line="61"/>
+  <Destructor id="_307" name="_heapinfo" artificial="1" throw="" context="_44" access="public" mangled="_ZN9_heapinfoD1Ev *INTERNAL* " demangled="_heapinfo::~_heapinfo()" location="f1:58" file="f1" line="58" endline="58" inline="1">
+  </Destructor>
+  <OperatorMethod id="_308" name="=" returns="_427" artificial="1" throw="" context="_44" access="public" mangled="_ZN9_heapinfoaSERKS_" demangled="_heapinfo::operator=(_heapinfo const&)" location="f1:58" file="f1" line="58" endline="58" inline="1">
+    <Argument type="_428" location="f1:58" file="f1" line="58"/>
+  </OperatorMethod>
+  <Constructor id="_309" name="_heapinfo" artificial="1" throw="" context="_44" access="public" mangled="_ZN9_heapinfoC1ERKS_ *INTERNAL* " demangled="_heapinfo::_heapinfo(_heapinfo const&)" location="f1:58" file="f1" line="58" endline="58" inline="1">
+    <Argument type="_428" location="f1:58" file="f1" line="58"/>
+  </Constructor>
+  <Constructor id="_310" name="_heapinfo" artificial="1" throw="" context="_44" access="public" mangled="_ZN9_heapinfoC1Ev *INTERNAL* " demangled="_heapinfo::_heapinfo()" location="f1:58" file="f1" line="58" inline="1"/>
+  <Field id="_311" name="wLanguage" type="_11" offset="0" context="_45" access="public" location="f3:1967" file="f3" line="1967"/>
+  <Field id="_312" name="wCountry" type="_11" offset="16" context="_45" access="public" location="f3:1968" file="f3" line="1968"/>
+  <Field id="_313" name="wCodePage" type="_11" offset="32" context="_45" access="public" location="f3:1969" file="f3" line="1969"/>
+  <Destructor id="_314" name="tagLC_ID" artificial="1" throw="" context="_45" access="public" mangled="_ZN8tagLC_IDD1Ev *INTERNAL* " demangled="tagLC_ID::~tagLC_ID()" location="f3:1966" file="f3" line="1966" endline="1966" inline="1">
+  </Destructor>
+  <OperatorMethod id="_315" name="=" returns="_429" artificial="1" throw="" context="_45" access="public" mangled="_ZN8tagLC_IDaSERKS_" demangled="tagLC_ID::operator=(tagLC_ID const&)" location="f3:1966" file="f3" line="1966" endline="1966" inline="1">
+    <Argument type="_430" location="f3:1966" file="f3" line="1966"/>
+  </OperatorMethod>
+  <Constructor id="_316" name="tagLC_ID" artificial="1" throw="" context="_45" access="public" mangled="_ZN8tagLC_IDC1ERKS_ *INTERNAL* " demangled="tagLC_ID::tagLC_ID(tagLC_ID const&)" location="f3:1966" file="f3" line="1966" endline="1966" inline="1">
+    <Argument type="_430" location="f3:1966" file="f3" line="1966"/>
+  </Constructor>
+  <Constructor id="_317" name="tagLC_ID" artificial="1" throw="" context="_45" access="public" mangled="_ZN8tagLC_IDC1Ev *INTERNAL* " demangled="tagLC_ID::tagLC_ID()" location="f3:1966" file="f3" line="1966" inline="1"/>
+  <PointerType id="_318" type="_271c" size="32" align="32"/>
+  <Field id="_319" name="locinfo" type="_173" offset="0" context="_63" access="public" location="f3:1961" file="f3" line="1961"/>
+  <Field id="_320" name="mbcinfo" type="_229" offset="32" context="_63" access="public" location="f3:1962" file="f3" line="1962"/>
+  <Destructor id="_321" name="localeinfo_struct" artificial="1" throw="" context="_63" access="public" mangled="_ZN17localeinfo_structD1Ev *INTERNAL* " demangled="localeinfo_struct::~localeinfo_struct()" location="f3:1960" file="f3" line="1960" endline="1960" inline="1">
+  </Destructor>
+  <OperatorMethod id="_322" name="=" returns="_432" artificial="1" throw="" context="_63" access="public" mangled="_ZN17localeinfo_structaSERKS_" demangled="localeinfo_struct::operator=(localeinfo_struct const&)" location="f3:1960" file="f3" line="1960" endline="1960" inline="1">
+    <Argument type="_433" location="f3:1960" file="f3" line="1960"/>
+  </OperatorMethod>
+  <Constructor id="_323" name="localeinfo_struct" artificial="1" throw="" context="_63" access="public" mangled="_ZN17localeinfo_structC1ERKS_ *INTERNAL* " demangled="localeinfo_struct::localeinfo_struct(localeinfo_struct const&)" location="f3:1960" file="f3" line="1960" endline="1960" inline="1">
+    <Argument type="_433" location="f3:1960" file="f3" line="1960"/>
+  </Constructor>
+  <Constructor id="_324" name="localeinfo_struct" artificial="1" throw="" context="_63" access="public" mangled="_ZN17localeinfo_structC1Ev *INTERNAL* " demangled="localeinfo_struct::localeinfo_struct()" location="f3:1960" file="f3" line="1960" inline="1"/>
+  <CvQualifiedType id="_270c" type="_270" const="1"/>
+  <Field id="_327" name="Value" type="_165" offset="0" context="_88" access="public" location="f4:156" file="f4" line="156"/>
+  <Destructor id="_328" name="InvalidCheckAttribute" artificial="1" throw="" context="_88" access="public" mangled="_ZN13vc_attributes21InvalidCheckAttributeD1Ev *INTERNAL* " demangled="vc_attributes::InvalidCheckAttribute::~InvalidCheckAttribute()" location="f4:151" file="f4" line="151" endline="151" inline="1">
+  </Destructor>
+  <OperatorMethod id="_329" name="=" returns="_434" artificial="1" throw="" context="_88" access="public" mangled="_ZN13vc_attributes21InvalidCheckAttributeaSERKS0_" demangled="vc_attributes::InvalidCheckAttribute::operator=(vc_attributes::InvalidCheckAttribute const&)" location="f4:151" file="f4" line="151" endline="151" inline="1">
+    <Argument type="_435" location="f4:151" file="f4" line="151"/>
+  </OperatorMethod>
+  <Constructor id="_330" name="InvalidCheckAttribute" artificial="1" throw="" context="_88" access="public" mangled="_ZN13vc_attributes21InvalidCheckAttributeC1ERKS0_ *INTERNAL* " demangled="vc_attributes::InvalidCheckAttribute::InvalidCheckAttribute(vc_attributes::InvalidCheckAttribute const&)" location="f4:151" file="f4" line="151" endline="151" inline="1">
+    <Argument type="_435" location="f4:151" file="f4" line="151"/>
+  </Constructor>
+  <Constructor id="_331" name="InvalidCheckAttribute" explicit="1" context="_88" access="public" mangled="_ZN13vc_attributes21InvalidCheckAttributeC1Ev *INTERNAL* " demangled="vc_attributes::InvalidCheckAttribute::InvalidCheckAttribute()" location="f4:153" file="f4" line="153" extern="1"/>
+  <Field id="_332" name="Style" type="_264" offset="0" context="_108" access="public" location="f4:145" file="f4" line="145"/>
+  <Field id="_333" name="UnformattedAlternative" type="_264" offset="32" context="_108" access="public" location="f4:146" file="f4" line="146"/>
+  <Destructor id="_334" name="FormatStringAttribute" artificial="1" throw="" context="_108" access="public" mangled="_ZN13vc_attributes21FormatStringAttributeD1Ev *INTERNAL* " demangled="vc_attributes::FormatStringAttribute::~FormatStringAttribute()" location="f4:140" file="f4" line="140" endline="140" inline="1">
+  </Destructor>
+  <OperatorMethod id="_335" name="=" returns="_436" artificial="1" throw="" context="_108" access="public" mangled="_ZN13vc_attributes21FormatStringAttributeaSERKS0_" demangled="vc_attributes::FormatStringAttribute::operator=(vc_attributes::FormatStringAttribute const&)" location="f4:140" file="f4" line="140" endline="140" inline="1">
+    <Argument type="_437" location="f4:140" file="f4" line="140"/>
+  </OperatorMethod>
+  <Constructor id="_336" name="FormatStringAttribute" artificial="1" throw="" context="_108" access="public" mangled="_ZN13vc_attributes21FormatStringAttributeC1ERKS0_ *INTERNAL* " demangled="vc_attributes::FormatStringAttribute::FormatStringAttribute(vc_attributes::FormatStringAttribute const&)" location="f4:140" file="f4" line="140" endline="140" inline="1">
+    <Argument type="_437" location="f4:140" file="f4" line="140"/>
+  </Constructor>
+  <Constructor id="_337" name="FormatStringAttribute" explicit="1" context="_108" access="public" mangled="_ZN13vc_attributes21FormatStringAttributeC1Ev *INTERNAL* " demangled="vc_attributes::FormatStringAttribute::FormatStringAttribute()" location="f4:142" file="f4" line="142" extern="1"/>
+  <Field id="_338" name="Deref" type="_29" offset="0" context="_137" access="public" location="f4:174" file="f4" line="174"/>
+  <Destructor id="_339" name="PreBoundAttribute" artificial="1" throw="" context="_137" access="public" mangled="_ZN13vc_attributes17PreBoundAttributeD1Ev *INTERNAL* " demangled="vc_attributes::PreBoundAttribute::~PreBoundAttribute()" location="f4:170" file="f4" line="170" endline="170" inline="1">
+  </Destructor>
+  <OperatorMethod id="_340" name="=" returns="_438" artificial="1" throw="" context="_137" access="public" mangled="_ZN13vc_attributes17PreBoundAttributeaSERKS0_" demangled="vc_attributes::PreBoundAttribute::operator=(vc_attributes::PreBoundAttribute const&)" location="f4:170" file="f4" line="170" endline="170" inline="1">
+    <Argument type="_439" location="f4:170" file="f4" line="170"/>
+  </OperatorMethod>
+  <Constructor id="_341" name="PreBoundAttribute" artificial="1" throw="" context="_137" access="public" mangled="_ZN13vc_attributes17PreBoundAttributeC1ERKS0_ *INTERNAL* " demangled="vc_attributes::PreBoundAttribute::PreBoundAttribute(vc_attributes::PreBoundAttribute const&)" location="f4:170" file="f4" line="170" endline="170" inline="1">
+    <Argument type="_439" location="f4:170" file="f4" line="170"/>
+  </Constructor>
+  <Constructor id="_342" name="PreBoundAttribute" explicit="1" context="_137" access="public" mangled="_ZN13vc_attributes17PreBoundAttributeC1Ev *INTERNAL* " demangled="vc_attributes::PreBoundAttribute::PreBoundAttribute()" location="f4:172" file="f4" line="172" extern="1"/>
+  <PointerType id="_343" type="_65" size="32" align="32"/>
+  <PointerType id="_344" type="_259" size="32" align="32"/>
+  <PointerType id="_345" type="_75" size="32" align="32"/>
+  <Field id="_346" name="refcount" type="_114" offset="0" context="_163" access="public" location="f3:1976" file="f3" line="1976"/>
+  <Field id="_347" name="lc_codepage" type="_29" offset="32" context="_163" access="public" location="f3:1977" file="f3" line="1977"/>
+  <Field id="_348" name="lc_collate_cp" type="_29" offset="64" context="_163" access="public" location="f3:1978" file="f3" line="1978"/>
+  <Field id="_349" name="lc_handle" type="_440" offset="96" context="_163" access="public" location="f3:1979" file="f3" line="1979"/>
+  <Field id="_350" name="lc_id" type="_441" offset="288" context="_163" access="public" location="f3:1980" file="f3" line="1980"/>
+  <Field id="_351" name="lc_category" type="_442" offset="576" context="_163" access="public" location="f3:1986" file="f3" line="1986"/>
+  <Field id="_352" name="lc_clike" type="_114" offset="1344" context="_163" access="public" location="f3:1987" file="f3" line="1987"/>
+  <Field id="_353" name="mb_cur_max" type="_114" offset="1376" context="_163" access="public" location="f3:1988" file="f3" line="1988"/>
+  <Field id="_354" name="lconv_intl_refcount" type="_426" offset="1408" context="_163" access="public" location="f3:1989" file="f3" line="1989"/>
+  <Field id="_355" name="lconv_num_refcount" type="_426" offset="1440" context="_163" access="public" location="f3:1990" file="f3" line="1990"/>
+  <Field id="_356" name="lconv_mon_refcount" type="_426" offset="1472" context="_163" access="public" location="f3:1991" file="f3" line="1991"/>
+  <Field id="_357" name="lconv" type="_443" offset="1504" context="_163" access="public" location="f3:1992" file="f3" line="1992"/>
+  <Field id="_358" name="ctype1_refcount" type="_426" offset="1536" context="_163" access="public" location="f3:1993" file="f3" line="1993"/>
+  <Field id="_359" name="ctype1" type="_444" offset="1568" context="_163" access="public" location="f3:1994" file="f3" line="1994"/>
+  <Field id="_360" name="pctype" type="_445" offset="1600" context="_163" access="public" location="f3:1995" file="f3" line="1995"/>
+  <Field id="_361" name="pclmap" type="_446" offset="1632" context="_163" access="public" location="f3:1996" file="f3" line="1996"/>
+  <Field id="_362" name="pcumap" type="_446" offset="1664" context="_163" access="public" location="f3:1997" file="f3" line="1997"/>
+  <Field id="_363" name="lc_time_curr" type="_447" offset="1696" context="_163" access="public" location="f3:1998" file="f3" line="1998"/>
+  <Struct id="_364" context="_163" access="public" mangled="N22threadlocaleinfostruct3$_0E" demangled="threadlocaleinfostruct::$_0" location="f3:1981" file="f3" line="1981" artificial="1" size="128" align="32" members="_448 _449 _450 _451 _452 _453 _454 _455 " bases=""/>
+  <Destructor id="_365" name="threadlocaleinfostruct" artificial="1" throw="" context="_163" access="public" mangled="_ZN22threadlocaleinfostructD1Ev *INTERNAL* " demangled="threadlocaleinfostruct::~threadlocaleinfostruct()" location="f3:1975" file="f3" line="1975" endline="1975" inline="1">
+  </Destructor>
+  <OperatorMethod id="_366" name="=" returns="_456" artificial="1" throw="" context="_163" access="public" mangled="_ZN22threadlocaleinfostructaSERKS_" demangled="threadlocaleinfostruct::operator=(threadlocaleinfostruct const&)" location="f3:1975" file="f3" line="1975" endline="1975" inline="1">
+    <Argument type="_457" location="f3:1975" file="f3" line="1975"/>
+  </OperatorMethod>
+  <Constructor id="_367" name="threadlocaleinfostruct" artificial="1" throw="" context="_163" access="public" mangled="_ZN22threadlocaleinfostructC1ERKS_ *INTERNAL* " demangled="threadlocaleinfostruct::threadlocaleinfostruct(threadlocaleinfostruct const&)" location="f3:1975" file="f3" line="1975" endline="1975" inline="1">
+    <Argument type="_457" location="f3:1975" file="f3" line="1975"/>
+  </Constructor>
+  <Constructor id="_368" name="threadlocaleinfostruct" artificial="1" throw="" context="_163" access="public" mangled="_ZN22threadlocaleinfostructC1Ev *INTERNAL* " demangled="threadlocaleinfostruct::threadlocaleinfostruct()" location="f3:1975" file="f3" line="1975" inline="1"/>
+  <Field id="_369" name="Deref" type="_29" offset="0" context="_168" access="public" location="f4:115" file="f4" line="115"/>
+  <Field id="_370" name="Valid" type="_270" offset="32" context="_168" access="public" location="f4:116" file="f4" line="116"/>
+  <Field id="_371" name="Null" type="_270" offset="64" context="_168" access="public" location="f4:117" file="f4" line="117"/>
+  <Field id="_372" name="Tainted" type="_270" offset="96" context="_168" access="public" location="f4:118" file="f4" line="118"/>
+  <Field id="_373" name="Access" type="_272" offset="128" context="_168" access="public" location="f4:119" file="f4" line="119"/>
+  <Field id="_374" name="ValidElementsConst" type="_161" offset="160" context="_168" access="public" location="f4:120" file="f4" line="120"/>
+  <Field id="_375" name="ValidBytesConst" type="_161" offset="192" context="_168" access="public" location="f4:121" file="f4" line="121"/>
+  <Field id="_376" name="ValidElements" type="_264" offset="224" context="_168" access="public" location="f4:122" file="f4" line="122"/>
+  <Field id="_377" name="ValidBytes" type="_264" offset="256" context="_168" access="public" location="f4:123" file="f4" line="123"/>
+  <Field id="_378" name="ValidElementsLength" type="_264" offset="288" context="_168" access="public" location="f4:124" file="f4" line="124"/>
+  <Field id="_379" name="ValidBytesLength" type="_264" offset="320" context="_168" access="public" location="f4:125" file="f4" line="125"/>
+  <Field id="_380" name="WritableElementsConst" type="_161" offset="352" context="_168" access="public" location="f4:126" file="f4" line="126"/>
+  <Field id="_381" name="WritableBytesConst" type="_161" offset="384" context="_168" access="public" location="f4:127" file="f4" line="127"/>
+  <Field id="_382" name="WritableElements" type="_264" offset="416" context="_168" access="public" location="f4:128" file="f4" line="128"/>
+  <Field id="_383" name="WritableBytes" type="_264" offset="448" context="_168" access="public" location="f4:129" file="f4" line="129"/>
+  <Field id="_384" name="WritableElementsLength" type="_264" offset="480" context="_168" access="public" location="f4:130" file="f4" line="130"/>
+  <Field id="_385" name="WritableBytesLength" type="_264" offset="512" context="_168" access="public" location="f4:131" file="f4" line="131"/>
+  <Field id="_386" name="ElementSizeConst" type="_161" offset="544" context="_168" access="public" location="f4:132" file="f4" line="132"/>
+  <Field id="_387" name="ElementSize" type="_264" offset="576" context="_168" access="public" location="f4:133" file="f4" line="133"/>
+  <Field id="_388" name="NullTerminated" type="_270" offset="608" context="_168" access="public" location="f4:134" file="f4" line="134"/>
+  <Field id="_389" name="MustCheck" type="_270" offset="640" context="_168" access="public" location="f4:135" file="f4" line="135"/>
+  <Field id="_390" name="Condition" type="_264" offset="672" context="_168" access="public" location="f4:136" file="f4" line="136"/>
+  <Destructor id="_391" name="PostAttribute" artificial="1" throw="" context="_168" access="public" mangled="_ZN13vc_attributes13PostAttributeD1Ev *INTERNAL* " demangled="vc_attributes::PostAttribute::~PostAttribute()" location="f4:110" file="f4" line="110" endline="110" inline="1">
+  </Destructor>
+  <OperatorMethod id="_392" name="=" returns="_458" artificial="1" throw="" context="_168" access="public" mangled="_ZN13vc_attributes13PostAttributeaSERKS0_" demangled="vc_attributes::PostAttribute::operator=(vc_attributes::PostAttribute const&)" location="f4:110" file="f4" line="110" endline="110" inline="1">
+    <Argument type="_459" location="f4:110" file="f4" line="110"/>
+  </OperatorMethod>
+  <Constructor id="_393" name="PostAttribute" artificial="1" throw="" context="_168" access="public" mangled="_ZN13vc_attributes13PostAttributeC1ERKS0_ *INTERNAL* " demangled="vc_attributes::PostAttribute::PostAttribute(vc_attributes::PostAttribute const&)" location="f4:110" file="f4" line="110" endline="110" inline="1">
+    <Argument type="_459" location="f4:110" file="f4" line="110"/>
+  </Constructor>
+  <Constructor id="_394" name="PostAttribute" explicit="1" context="_168" access="public" mangled="_ZN13vc_attributes13PostAttributeC1Ev *INTERNAL* " demangled="vc_attributes::PostAttribute::PostAttribute()" location="f4:112" file="f4" line="112" extern="1"/>
+  <Field id="_395" name="Deref" type="_29" offset="0" context="_175" access="public" location="f4:192" file="f4" line="192"/>
+  <Field id="_396" name="MinVal" type="_261" offset="32" context="_175" access="public" location="f4:193" file="f4" line="193"/>
+  <Field id="_397" name="MaxVal" type="_261" offset="64" context="_175" access="public" location="f4:194" file="f4" line="194"/>
+  <Destructor id="_398" name="PreRangeAttribute" artificial="1" throw="" context="_175" access="public" mangled="_ZN13vc_attributes17PreRangeAttributeD1Ev *INTERNAL* " demangled="vc_attributes::PreRangeAttribute::~PreRangeAttribute()" location="f4:188" file="f4" line="188" endline="188" inline="1">
+  </Destructor>
+  <OperatorMethod id="_399" name="=" returns="_460" artificial="1" throw="" context="_175" access="public" mangled="_ZN13vc_attributes17PreRangeAttributeaSERKS0_" demangled="vc_attributes::PreRangeAttribute::operator=(vc_attributes::PreRangeAttribute const&)" location="f4:188" file="f4" line="188" endline="188" inline="1">
+    <Argument type="_461" location="f4:188" file="f4" line="188"/>
+  </OperatorMethod>
+  <Constructor id="_400" name="PreRangeAttribute" artificial="1" throw="" context="_175" access="public" mangled="_ZN13vc_attributes17PreRangeAttributeC1ERKS0_ *INTERNAL* " demangled="vc_attributes::PreRangeAttribute::PreRangeAttribute(vc_attributes::PreRangeAttribute const&)" location="f4:188" file="f4" line="188" endline="188" inline="1">
+    <Argument type="_461" location="f4:188" file="f4" line="188"/>
+  </Constructor>
+  <Constructor id="_401" name="PreRangeAttribute" explicit="1" context="_175" access="public" mangled="_ZN13vc_attributes17PreRangeAttributeC1Ev *INTERNAL* " demangled="vc_attributes::PreRangeAttribute::PreRangeAttribute()" location="f4:190" file="f4" line="190" extern="1"/>
+  <PointerType id="_402" type="_161" size="32" align="32"/>
+  <FundamentalType id="_403" name="long unsigned int" size="32" align="32"/>
+  <Field id="_404" name="Deref" type="_29" offset="0" context="_240" access="public" location="f4:203" file="f4" line="203"/>
+  <Field id="_405" name="MinVal" type="_261" offset="32" context="_240" access="public" location="f4:204" file="f4" line="204"/>
+  <Field id="_406" name="MaxVal" type="_261" offset="64" context="_240" access="public" location="f4:205" file="f4" line="205"/>
+  <Destructor id="_407" name="PostRangeAttribute" artificial="1" throw="" context="_240" access="public" mangled="_ZN13vc_attributes18PostRangeAttributeD1Ev *INTERNAL* " demangled="vc_attributes::PostRangeAttribute::~PostRangeAttribute()" location="f4:199" file="f4" line="199" endline="199" inline="1">
+  </Destructor>
+  <OperatorMethod id="_408" name="=" returns="_462" artificial="1" throw="" context="_240" access="public" mangled="_ZN13vc_attributes18PostRangeAttributeaSERKS0_" demangled="vc_attributes::PostRangeAttribute::operator=(vc_attributes::PostRangeAttribute const&)" location="f4:199" file="f4" line="199" endline="199" inline="1">
+    <Argument type="_463" location="f4:199" file="f4" line="199"/>
+  </OperatorMethod>
+  <Constructor id="_409" name="PostRangeAttribute" artificial="1" throw="" context="_240" access="public" mangled="_ZN13vc_attributes18PostRangeAttributeC1ERKS0_ *INTERNAL* " demangled="vc_attributes::PostRangeAttribute::PostRangeAttribute(vc_attributes::PostRangeAttribute const&)" location="f4:199" file="f4" line="199" endline="199" inline="1">
+    <Argument type="_463" location="f4:199" file="f4" line="199"/>
+  </Constructor>
+  <Constructor id="_410" name="PostRangeAttribute" explicit="1" context="_240" access="public" mangled="_ZN13vc_attributes18PostRangeAttributeC1Ev *INTERNAL* " demangled="vc_attributes::PostRangeAttribute::PostRangeAttribute()" location="f4:201" file="f4" line="201" extern="1"/>
+  <FundamentalType id="_325" name="char" size="8" align="8"/>
+  <Field id="_411" name="key" type="_65" offset="0" context="_257" access="public" location="f6:12" file="f6" line="12"/>
+  <Field id="_412" name="data" type="_114" offset="32" context="_257" access="public" location="f6:13" file="f6" line="13"/>
+  <Field id="_413" name="next" type="_209" offset="64" context="_257" access="public" location="f6:14" file="f6" line="14"/>
+  <Destructor id="_414" name="HTentry" artificial="1" throw="" context="_257" access="public" mangled="_ZN7HTentryD1Ev *INTERNAL* " demangled="HTentry::~HTentry()" location="f6:11" file="f6" line="11" endline="11" inline="1">
+  </Destructor>
+  <OperatorMethod id="_415" name="=" returns="_464" artificial="1" throw="" context="_257" access="public" mangled="_ZN7HTentryaSERKS_" demangled="HTentry::operator=(HTentry const&)" location="f6:11" file="f6" line="11" endline="11" inline="1">
+    <Argument type="_465" location="f6:11" file="f6" line="11"/>
+  </OperatorMethod>
+  <Constructor id="_416" name="HTentry" artificial="1" throw="" context="_257" access="public" mangled="_ZN7HTentryC1ERKS_ *INTERNAL* " demangled="HTentry::HTentry(HTentry const&)" location="f6:11" file="f6" line="11" endline="11" inline="1">
+    <Argument type="_465" location="f6:11" file="f6" line="11"/>
+  </Constructor>
+  <Constructor id="_417" name="HTentry" artificial="1" throw="" context="_257" access="public" mangled="_ZN7HTentryC1Ev *INTERNAL* " demangled="HTentry::HTentry()" location="f6:11" file="f6" line="11" inline="1"/>
+  <ReferenceType id="_420" type="_15" size="32" align="32"/>
+  <ReferenceType id="_421" type="_15c" size="32" align="32"/>
+  <ReferenceType id="_422" type="_35" size="32" align="32"/>
+  <ReferenceType id="_423" type="_35c" size="32" align="32"/>
+  <ReferenceType id="_424" type="_40" size="32" align="32"/>
+  <ReferenceType id="_425" type="_40c" size="32" align="32"/>
+  <PointerType id="_426" type="_114" size="32" align="32"/>
+  <ReferenceType id="_427" type="_44" size="32" align="32"/>
+  <ReferenceType id="_428" type="_44c" size="32" align="32"/>
+  <ReferenceType id="_429" type="_45" size="32" align="32"/>
+  <ReferenceType id="_430" type="_45c" size="32" align="32"/>
+  <ReferenceType id="_432" type="_63" size="32" align="32"/>
+  <ReferenceType id="_433" type="_63c" size="32" align="32"/>
+  <ReferenceType id="_434" type="_88" size="32" align="32"/>
+  <ReferenceType id="_435" type="_88c" size="32" align="32"/>
+  <ReferenceType id="_436" type="_108" size="32" align="32"/>
+  <ReferenceType id="_437" type="_108c" size="32" align="32"/>
+  <ReferenceType id="_438" type="_137" size="32" align="32"/>
+  <ReferenceType id="_439" type="_137c" size="32" align="32"/>
+  <ArrayType id="_440" min="0" max="5u" type="_403" size="192" align="32"/>
+  <ArrayType id="_441" min="0" max="5u" type="_46" size="288" align="16"/>
+  <ArrayType id="_442" min="0" max="5u" type="_364" size="768" align="32"/>
+  <PointerType id="_443" type="_208" size="32" align="32"/>
+  <PointerType id="_444" type="_11" size="32" align="32"/>
+  <PointerType id="_445" type="_11c" size="32" align="32"/>
+  <PointerType id="_446" type="_476c" size="32" align="32"/>
+  <PointerType id="_447" type="_177" size="32" align="32"/>
+  <Field id="_448" name="locale" type="_65" offset="0" context="_364" access="public" location="f3:1982" file="f3" line="1982"/>
+  <Field id="_449" name="wlocale" type="_259" offset="32" context="_364" access="public" location="f3:1983" file="f3" line="1983"/>
+  <Field id="_450" name="refcount" type="_426" offset="64" context="_364" access="public" location="f3:1984" file="f3" line="1984"/>
+  <Field id="_451" name="wrefcount" type="_426" offset="96" context="_364" access="public" location="f3:1985" file="f3" line="1985"/>
+  <Destructor id="_452" name="$_0" artificial="1" throw="" context="_364" access="public" mangled="_ZN22threadlocaleinfostruct3$_0D1Ev *INTERNAL* " demangled="threadlocaleinfostruct::$_0::~$_0()" location="f3:1981" file="f3" line="1981" endline="1981" inline="1">
+  </Destructor>
+  <OperatorMethod id="_453" name="=" returns="_478" artificial="1" throw="" context="_364" access="public" mangled="_ZN22threadlocaleinfostruct3$_0aSERKS0_" demangled="threadlocaleinfostruct::$_0::operator=(threadlocaleinfostruct::$_0 const&)" location="f3:1981" file="f3" line="1981" endline="1981" inline="1">
+    <Argument type="_479" location="f3:1981" file="f3" line="1981"/>
+  </OperatorMethod>
+  <Constructor id="_454" artificial="1" throw="" context="_364" access="public" mangled="_ZN22threadlocaleinfostruct3$_0C1ERKS0_ *INTERNAL* " demangled="threadlocaleinfostruct::$_0::$_0(threadlocaleinfostruct::$_0 const&)" location="f3:1981" file="f3" line="1981" endline="1981" inline="1">
+    <Argument type="_479" location="f3:1981" file="f3" line="1981"/>
+  </Constructor>
+  <Constructor id="_455" artificial="1" throw="" context="_364" access="public" mangled="_ZN22threadlocaleinfostruct3$_0C1Ev *INTERNAL* " demangled="threadlocaleinfostruct::$_0::$_0()" location="f3:1981" file="f3" line="1981" inline="1"/>
+  <ReferenceType id="_456" type="_163" size="32" align="32"/>
+  <ReferenceType id="_457" type="_163c" size="32" align="32"/>
+  <ReferenceType id="_458" type="_168" size="32" align="32"/>
+  <ReferenceType id="_459" type="_168c" size="32" align="32"/>
+  <ReferenceType id="_460" type="_175" size="32" align="32"/>
+  <ReferenceType id="_461" type="_175c" size="32" align="32"/>
+  <ReferenceType id="_462" type="_240" size="32" align="32"/>
+  <ReferenceType id="_463" type="_240c" size="32" align="32"/>
+  <ReferenceType id="_464" type="_257" size="32" align="32"/>
+  <ReferenceType id="_465" type="_257c" size="32" align="32"/>
+  <ReferenceType id="_478" type="_364" size="32" align="32"/>
+  <ReferenceType id="_479" type="_364c" size="32" align="32"/>
+  <FundamentalType id="_476" name="unsigned char" size="8" align="8"/>
+  <CvQualifiedType id="_325c" type="_325" const="1"/>
+  <CvQualifiedType id="_260c" type="_260" const="1"/>
+  <CvQualifiedType id="_35c" type="_35" const="1"/>
+  <CvQualifiedType id="_168c" type="_168" const="1"/>
+  <CvQualifiedType id="_108c" type="_108" const="1"/>
+  <CvQualifiedType id="_88c" type="_88" const="1"/>
+  <CvQualifiedType id="_40c" type="_40" const="1"/>
+  <CvQualifiedType id="_137c" type="_137" const="1"/>
+  <CvQualifiedType id="_15c" type="_15" const="1"/>
+  <CvQualifiedType id="_175c" type="_175" const="1"/>
+  <CvQualifiedType id="_240c" type="_240" const="1"/>
+  <CvQualifiedType id="_63c" type="_63" const="1"/>
+  <CvQualifiedType id="_45c" type="_45" const="1"/>
+  <CvQualifiedType id="_364c" type="_364" const="1"/>
+  <CvQualifiedType id="_11c" type="_11" const="1"/>
+  <CvQualifiedType id="_476c" type="_476" const="1"/>
+  <CvQualifiedType id="_163c" type="_163" const="1"/>
+  <CvQualifiedType id="_44c" type="_44" const="1"/>
+  <CvQualifiedType id="_271c" type="_271" const="1"/>
+  <CvQualifiedType id="_257c" type="_257" const="1"/>
+  <File id="f0" name="C:/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/string.h"/>
+  <File id="f1" name="C:/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/malloc.h"/>
+  <File id="f2" name="D:\1.8\source5_1_007\hash.c"/>
+  <File id="f3" name="D:/gccxml_build/GCC_XML/Support/Vc10/Include/crtdefs.h"/>
+  <File id="f4" name="D:/gccxml_build/GCC_XML/Support/Vc10/Include/codeanalysis\sourceannotations.h"/>
+  <File id="f5" name="C:/Program Files (x86)/Microsoft Visual Studio 10.0/VC/include/vadefs.h"/>
+  <File id="f6" name="D:\1.8\source5_1_007\/hash.h"/>
+</GCC_XML>
+
+
+我们可以看到基本上源码中的信息都可以在XML文件中找到，当然按照需求我们还得对xml文件中的信息进行提取。这就是另一个牛&#36924;的工具pygccxml干的事情了，事实上这个工具也包含了gccxml的功能，而且更强大些。
+
+
+
+
+
+
+   

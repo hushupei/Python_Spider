@@ -1,0 +1,279 @@
+
+
+//数据库请到我的资源里下载
+
+
+//这次实现遇到问题了，就是提示变量重定义SqlHelper.ExecuteNonQuery(sql,
+   //                                                                                  new SqlParameter("@TelNum", telnum),
+  //                                                                                   new SqlParameter("@TelNumArea", telarea),
+   //                                                                                  new SqlParameter("@TelNumType", teltype),
+   //                                                                                   new SqlParameter("@AreaNum", areanum));
+
+
+//后来改了一下，发现只要每次new 一个cmd就不会出问题。一条cmd只能传一次参数，多次传参须定义不同的"@变量名"
+
+
+using Microsoft.Win32;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace _04第四季_三_手机号码
+{
+    /// <summary>
+    /// MainWindow.xaml 的交互逻辑
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        /// <summary>
+        /// 调用SqlHelper插入数据，每插入一条需打开关闭数据库，所以效率低下。
+        /// 更好的办法是一次打开，全部插入，当然如果连接断开则是很麻烦的事情。
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SqlHelperImport_Click(object sender, RoutedEventArgs e)
+        {
+            string sql = @"insert into T_TelNumSearch(TelNum,TelNumArea,TelNumType,AreaNum)
+                    values(@TelNum,@TelNumArea,@TelNumType,@AreaNum)";
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "文本文件|*.txt";
+            if (ofd.ShowDialog() == false)
+            {
+                return;
+            }
+            //IEnumerable<string> telNum = File.ReadAllLines(ofd.FileName,Encoding.Default);
+            //telNum.ElementAt(i);//取到第i个元素
+            string[] telNum = File.ReadAllLines(ofd.FileName, Encoding.Default).ToArray();
+            DateTime dt = DateTime.Now;
+            for (int i = 1; i < telNum.Length; ++i)
+            {
+                string[] strs = telNum[i].Split('\t');//Tab键转义为“\t”
+                string telnum = strs[0];
+                string telarea = strs[1];
+                string teltype = strs[2];
+                string areanum = strs[3];
+                //连接并不是真正关闭，下次会复用
+                SqlHelper.ExecuteNonQuery(sql,
+                    new SqlParameter("@TelNum", telnum),
+                    new SqlParameter("@TelNumArea", telarea),
+                    new SqlParameter("@TelNumType", teltype),
+                    new SqlParameter("@AreaNum", areanum));
+                TimeSpan ts = DateTime.Now - dt;
+                double totalTime = ts.TotalSeconds * telNum.Length / i;
+            }
+            MessageBox.Show("共插入" + telNum.Count().ToString() + "条数据");
+
+        }
+
+        /// <summary>
+        /// 看起来一次打开插入数据跟,多次打开关闭花的时间差不多,原因:多次打开关闭中并不是真的关闭,而是实现了连接复用
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void btnInsert_Click(object sender, RoutedEventArgs e)
+        {
+            string sql = @"insert into T_TelNumSearch(TelNum,TelNumArea,TelNumType,AreaNum)
+                    values(@TelNum,@TelNumArea,@TelNumType,@AreaNum)";
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "文本文件|*.txt";
+            if (ofd.ShowDialog() == false)
+            {
+                return;
+            }
+            //IEnumerable<string> telNum = File.ReadAllLines(ofd.FileName,Encoding.Default);
+            //telNum.ElementAt(i);//取到第i个元素
+            string[] telNum = File.ReadAllLines(ofd.FileName, Encoding.Default).ToArray();
+            using (SqlConnection conn = new SqlConnection("Data Source=.;Initial Catalog=stu;User ID=sa;Password=tao201415shu"))
+            {
+                conn.Open();
+                using(SqlCommand cmd=conn.CreateCommand())//一条cmd只能传一次参数，多次传参须定义不同的"@变量名"
+                {
+
+                    DateTime dt = DateTime.Now;
+                    for (int i = 1; i < telNum.Length; ++i)
+                    {
+                        string[] strs = telNum[i].Split('\t');//Tab键转义为“\t”
+                        string telnum = strs[0].Trim('"');
+                        string telarea = strs[1].Trim('"');
+                        string teltype = strs[2].Trim('"');
+                        string areanum = strs[3].Trim('"');
+                 
+                        sql = "insert into T_TelNumSearch(TelNum,TelNumArea,TelNumType,AreaNum)values('"+telnum+"','"+telarea+"','"+teltype+"','"+areanum+"')";
+                        cmd.CommandText = sql;
+                        cmd.ExecuteNonQuery();
+                        TimeSpan ts = DateTime.Now - dt;
+                        double totalTime = ts.TotalSeconds * telNum.Length / i;
+                    }
+                }
+            }
+            
+            MessageBox.Show("共插入" + telNum.Count().ToString() + "条数据");
+
+        }
+
+      
+
+//        /// <summary>
+//        /// 错误的写法，cmd参数变量重定义
+//        /// </summary>
+//        /// <param name="sender"></param>
+//        /// <param name="e"></param>
+//        private void btnInsert_Click(object sender, RoutedEventArgs e)
+//        {
+//            string sql = @"insert into T_TelNumSearch(TelNum,TelNumArea,TelNumType,AreaNum)
+//                    values(@TelNum,@TelNumArea,@TelNumType,@AreaNum)";
+//            OpenFileDialog ofd = new OpenFileDialog();
+//            ofd.Filter = "文本文件|*.txt";
+//            if (ofd.ShowDialog() == false)
+//            {
+//                return;
+//            }
+//            //IEnumerable<string> telNum = File.ReadAllLines(ofd.FileName,Encoding.Default);
+//            //telNum.ElementAt(i);//取到第i个元素
+//            string[] telNum = File.ReadAllLines(ofd.FileName, Encoding.Default).ToArray();
+//            using (SqlConnection conn = new SqlConnection("Data Source=.;Initial Catalog=stu;User ID=sa;Password=tao201415shu"))
+//            {
+//                conn.Open();
+//                using (SqlCommand cmd = conn.CreateCommand())//一条cmd只能传一次参数，多次传参须定义不同的"@变量名"
+//                {
+//                    cmd.CommandText = sql;
+//                    DateTime dt = DateTime.Now;
+//                    for (int i = 1; i < telNum.Length; ++i)
+//                    {
+//                        string[] strs = telNum[i].Split('\t');//Tab键转义为“\t”
+//                        string telnum = strs[0].Trim('"');
+//                        string telarea = strs[1].Trim('"');
+//                        string teltype = strs[2].Trim('"');
+//                        string areanum = strs[3].Trim('"');
+//                        SqlParameter[] paramters ={new SqlParameter("@TelNum", telnum),
+//                                                new SqlParameter("@TelNumArea", telarea),
+//                                                new SqlParameter("@TelNumType", teltype),
+//                                                new SqlParameter("@AreaNum", areanum)};
+//                        cmd.Parameters.AddRange(paramters);
+               
+                        
+//                        cmd.ExecuteNonQuery();
+//                        TimeSpan ts = DateTime.Now - dt;
+//                        double totalTime = ts.TotalSeconds * telNum.Length / i;
+//                    }
+//                }
+//            }
+
+//            MessageBox.Show("共插入" + telNum.Count().ToString() + "条数据");
+
+//        }
+
+
+         private void btnInsert2_Click(object sender, RoutedEventArgs e)
+        {
+            string sql = @"insert into T_TelNumSearch(TelNum,TelNumArea,TelNumType,AreaNum)
+                    values(@TelNum,@TelNumArea,@TelNumType,@AreaNum)";
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "文本文件|*.txt";
+            if (ofd.ShowDialog() == false)
+            {
+                return;
+            }
+            //IEnumerable<string> telNum = File.ReadAllLines(ofd.FileName,Encoding.Default);
+            //telNum.ElementAt(i);//取到第i个元素
+            string[] telNum = File.ReadAllLines(ofd.FileName, Encoding.Default).ToArray();
+            using (SqlConnection conn = new SqlConnection("Data Source=.;Initial Catalog=stu;User ID=sa;Password=tao201415shu"))
+            {
+                conn.Open();
+                DateTime dt = DateTime.Now;
+                for (int i = 1; i < telNum.Length; ++i)
+                {
+                    string[] strs = telNum[i].Split('\t');//Tab键转义为“\t”
+                    string telnum = strs[0].Trim('"');
+                    string telarea = strs[1].Trim('"');
+                    string teltype = strs[2].Trim('"');
+                    string areanum = strs[3].Trim('"');
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = sql;
+                        SqlParameter[] paramters ={new SqlParameter("@TelNum", telnum),
+                                                new SqlParameter("@TelNumArea", telarea),
+                                                new SqlParameter("@TelNumType", teltype),
+                                                new SqlParameter("@AreaNum", areanum)};
+                        cmd.Parameters.AddRange(paramters);
+                        cmd.ExecuteNonQuery();
+                    }
+                    TimeSpan ts = DateTime.Now - dt;
+                    double totalTime = ts.TotalSeconds * telNum.Length / i;
+                }
+                MessageBox.Show("共插入" + telNum.Count().ToString() + "条数据");
+            }
+        }
+
+        //SqlBulkCopy类，先将数据插入内存中的DataTable中，然后批量提交到数据库
+         private void btnQuickInsert_Click(object sender, RoutedEventArgs e)
+         {
+             
+             OpenFileDialog ofd = new OpenFileDialog();
+             ofd.Filter = "文本文件|*.txt";
+             if (ofd.ShowDialog() == false)
+             {
+                 return;
+             }
+             DataTable dataTable = new DataTable();
+             dataTable.Columns.Add("TelNum");
+             dataTable.Columns.Add("TelArea");
+             dataTable.Columns.Add("TelType");
+             dataTable.Columns.Add("AreaNum");
+             string[] telNum = File.ReadAllLines(ofd.FileName, Encoding.Default).ToArray();
+             
+             DateTime dt = DateTime.Now;
+
+             for (int i = 1; i < telNum.Length; ++i)
+             {
+                 string[] strs = telNum[i].Split('\t');//Tab键转义为“\t”
+                 string telnum = strs[0].Trim('"');
+                 string telarea = strs[1].Trim('"');
+                 string teltype = strs[2].Trim('"');
+                 string areanum = strs[3].Trim('"');
+                 DataRow row = dataTable.NewRow();//不能使用new DataRow()因为其是internal类型，不可外部访问
+                 row["TelNum"] = telnum;
+                 row["TelArea"] = telarea;
+                 row["TelType"] = teltype;
+                 row["AreaNum"] = areanum;
+                 dataTable.Rows.Add(row);
+             }
+             using(SqlBulkCopy bulkCopy=new SqlBulkCopy("Data Source=.;Initial Catalog=stu;User ID=sa;Password=tao201415shu"))
+             {
+                 bulkCopy.DestinationTableName = "T_TelNumSearch";
+                 bulkCopy.ColumnMappings.Add("TelNum", "TelNum");//从内存映射到数据库的列名
+                 bulkCopy.ColumnMappings.Add("TelArea", "TelNumArea");
+                 bulkCopy.ColumnMappings.Add("TelType", "TelNumType");
+                 bulkCopy.ColumnMappings.Add("AreaNum", "AreaNum");
+                 bulkCopy.WriteToServer(dataTable);
+             }
+             TimeSpan ts=DateTime.Now-dt;
+             MessageBox.Show(ts.ToString());
+
+         }
+
+    }
+}
+
+
+
+   

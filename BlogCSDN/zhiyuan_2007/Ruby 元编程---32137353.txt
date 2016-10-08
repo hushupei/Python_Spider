@@ -1,0 +1,56 @@
+
+
+Ruby 语言在抽象层面有了元编程支持，功能相当强大，如果业务模型有很大的相&#20284;性，相信元编程会让你节省大量代码。
+
+举一个小例如下，（这里只是使用了一个class_eval , 还有instance_eval, module_eval， Function.parameters等大量方法可以调用）
+
+比如 ，根据业务需求，需要创建多个有相&#20284;方法名的类， 比如方法都命令为 include_xxx, append_xxx, delete_xxx,  xxxs等 xxx 为具体的业务类。
+
+那么可以设计如下一个类， 实现此功能。
+
+module Factory
+    def  self.build_class(classname, cls_type)
+        sub_clss = cls_type.to_s.downcase
+        new_cls.class_eval <<-CLASSDEF
+            def initialize
+                @container = []
+            end
+
+            def append_#{sub_clss}(key)
+                @container << key
+            end
+
+            def delete_#{sub_clss}(key)
+                @container.delete_if{|e| e == key}
+            end
+
+            def include_#{sub_clss}?(key)
+                @container.find {|e| e == key} ? true : false
+            end
+            def traverse
+
+                puts "notice container elements as follows"
+                @container.each {|e| puts e}
+            end
+        CLASSDEF
+        new_cls
+    end
+end
+
+
+运行结果如下：
+
+c1 = (Factory.build_class "C1", String)
+n = c1.new
+n.append_string("abc") 
+puts n.traverse
+puts ">>>>", n.include_string?("abc")
+puts ">>>.",n.include_string?("123")
+n.delete_string("abc")
+puts n.traverse
+
+
+
+
+
+   

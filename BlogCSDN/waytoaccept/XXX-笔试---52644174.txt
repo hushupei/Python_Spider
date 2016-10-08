@@ -1,0 +1,99 @@
+
+
+小B最近对破解和程序攻击产生了兴趣，她迷上了病毒，然后可怕的事情就发生了。不知道什么原因，可能是小B的技术水平还不够高，小B编写的病毒程序在攻击一个服务器时出现了问题。尽管成功的侵入了服务器，但并没有按照期望的方式发挥作用。
+
+
+小B的目的很简单:控制服务器的内存区域，试图在内存中装入从1到n之间的n个自然数，以覆盖内存区域。可能是小B对编程理解上的问题，病毒&#20284;乎没有完全成功。可能是由于保护机制的原因，内存写入只接受二进制的形式，所以十进制表达中除0和1之外的其他&#20540;都没有成功写入内存。小B希望知道，究竟有多少数成功的写入了服务器的内存！
+
+
+输入
+输入中有多组测试数据。每组测试数据在单独的一行中，为整数n(1<=n <=10^9)。
+输出
+对每组测试数据，在单独的行中输出问题的答案。
+
+
+样例输入
+10
+20
+样例输出
+2
+3
+
+
+
+思路：求最接近输入的只含01串的二进制转化为10进制的结果
+
+#include<iostream>
+#include<string.h>
+#include<cstdio>
+#include<algorithm>
+#include<cmath>
+using namespace std;
+const int MAX=1000;
+
+int wei(int t)
+{
+    int res=0;
+    while(t>0)
+    {
+        t/=10;
+        res++;
+    }
+    return res;
+}
+int mpow(int a,int n)
+{
+    int res=1;
+    if(n==1)return a;
+    int b=mpow(a,n/2);
+    if((n&1)==1)return b*b*a;
+    else return  b*b;
+}
+int main()
+{
+	int n,res=0;
+	while(cin>>n)
+    {
+        res=0;
+        int t=n;
+        while(t>0)
+        {
+            int w=wei(t);
+            if(w>1)
+            {
+                int u=mpow(10,w-1);
+                int r=t%u;
+                int m=t/u;
+                if(m>1)
+                {
+                    res=res+mpow(2,w)-1;
+                    break;
+                }
+                else
+                {
+                    res+=mpow(2,w-1);
+                }
+                t=r;
+            }
+            else
+            {
+                res++;
+                break;
+            }
+        }
+        cout<<res<<endl;
+    }
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+   

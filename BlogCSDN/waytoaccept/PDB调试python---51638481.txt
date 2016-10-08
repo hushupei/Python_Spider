@@ -1,0 +1,32 @@
+
+
+pdb命令用来调试python前，先下载SublimeREPL
+插件
+
+http://blog.csdn.net/wenxuansoft/article/details/38559731
+
+
+
+pdb命令与gdb命令差不多，简单介绍一下常用的
+c                            //运行程序，直到遇到断点
+l                            //列出代码，后边可以加参数表示列出代码的范围，如 l 10,20
+b 8                          //第8行下断点
+n                            //下一行（不进入）
+s                            //下一行（进入）
+a                            //查看参数值
+p    变量                    //查看变量值
+h    命令                    //查看命令帮助信息
+
+
+
+
+
+更多请参考
+http://blog.csdn.net/carolzhang8406/article/details/6923997
+
+
+
+
+
+
+   

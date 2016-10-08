@@ -1,0 +1,31 @@
+
+
+        虽然一直在做swmm相关的研究，却也一直没有对EPA-SWMM进行编译,其中一个主要原因就是这个软件的界面部分是用delphi编写的，然而对于没有学习过delphi的我一开始是比较抵触，然而最近我想弄清楚EPA是怎样生产inp文件的或者说是怎么组织内存的。&#36924;不得已自己还是硬着头皮编译下。首先我们得下载界面部分的源码（http://www2.epa.gov/water-research/storm-water-management-model-swmm#downloads中的Source
+ code for theSWMM 5.1.010 Graphical User Interface (ZIP) 
+
+包）。
+
+        我们解压完这个压缩包，会解压出来两个文件夹。
+
+
+
+
+
+
+
+        Components为组件部分，个人感觉有点就像动态库or静态库一样的东西，所以得先编译，而GUI5_1_010为界面部分源码，得后面编译。具体的readme.txt中说的挺明白。
+
+        获得了源码之后，就得选取合适的delphi的IDE来进行编译，按照readme.txt中的说明我们选取delphi xe2（http://www.xpgod.com/soft/22259.html）作为IDE（千万别用低于这个版本的，一开始没看这个文件被坑了一上午，缺各种库）。下载完delphi xe2进行安装完成后，我们就开始编译了。
+
+
+
+
+
+
+
+ 
+
+一、编译Components
+
+        首先在菜单栏中找到Component菜单，然后选择下拉菜单中的Install Component.
+

@@ -1,0 +1,53 @@
+
+
+1.   编译程序进入gdb,命令都是'$'之后的字符串
+
+    终端下输入:
+
+          $ cc -g hello.c  -o hello
+          $ gdb  ./hello                     //进入gdb,这个时候显示gdb的信息
+
+
+     如果你的程序需要参数
+
+         $ gdb --args   ./hello  参数1  参数2 (等等)
+
+
+2. 下面是几个对应vc里面常用的命令,在gdb下输入命令,命令是'(gdb)'之后的字符
+
+
+
+         (gdb) r                       //运行run的缩写
+         (gdb) q                      //退出gdb,quit的缩写
+
+         (gdb) l                        //(list的首字母,不是竖线|)显示当前行前后的源程序
+         (gdb) l 100                //显示第100行前后的源程序,l  +行号,显示某行上下的源程序
+         (gdb) l sort                //显示sort函数的源代码,l +函数名,显示函数的源代码
+
+         (gdb) b 8                   //在第8行下断点,b是break的缩写,b+行号 ,在某行下断点
+         (gdb) tbreak  sort     //在函数sort处设置临时断点,到达后删除, tbreak+行号/函数名,设置临时断点
+         (gdb) clear 8             //删除第8行的断点
+         (gdb) clear                //清楚所有断点
+
+         (gdb) n                       //单步执行,step over,不进入函数,next的缩写
+         (gdb) s                       //单步执行,step in,进入函数,step的缩写
+         (gdb) u 20                 //执行到第20行,u是until的缩写
+         (gdb) c                       //继续执行,continue的缩写
+
+
+
+
+
+
+
+3.其他更高级命令请参考http://www.cnblogs.com/lidabo/p/4234362.html
+,感谢博主的分享.
+
+
+
+
+
+
+
+
+   

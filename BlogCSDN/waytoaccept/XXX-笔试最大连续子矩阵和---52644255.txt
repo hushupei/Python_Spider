@@ -1,0 +1,98 @@
+
+
+求给定矩阵的最大连续子矩阵的和
+
+
+
+
+思路：相邻行进行累加，转化为一位数组最大连续序列和。
+
+参考博客http://blog.csdn.net/beiyeqingteng/article/details/7056687
+
+
+
+
+
+
+
+#include <iostream>
+using namespace std;
+
+const int M=101;
+const int N=101;
+int a[M][N]={0};
+int MaxSum(int n,int *a);
+int MaxSum2(int m,int n,int a[M][N]);
+
+int main()
+{
+    int te;
+    int m;
+    int n;
+    cin>>te;
+    while(te--)
+    {
+        cin>>m>>n;
+        for(int i=0; i<m; i++)
+        {
+            for(int j=0; j<n; j++)
+            {
+                cin>>a[i][j];
+            }
+        }
+        cout<<"数组a的最大连续子矩阵和为:"<<MaxSum2(m,n,a)<<endl;
+    }
+    return 0;
+}
+
+int MaxSum2(int m,int n,int a[M][N])
+{
+    int sum = -100000000;
+    int *b = new int[n+1];
+    for(int i=0; i<m; i++)//枚举行
+    {
+        for(int k=0; k<n;k++)
+        {
+            b[k]=0;
+        }
+        for(int j=0;j+i<m;j++)//枚举初始行i,结束行j
+        {
+            for(int k=0; k<n; k++)
+            {
+                b[k] += a[j][k];//b[k]为纵向列之和
+                int max = MaxSum(n,b);
+                if(max>sum)
+                {
+                    sum = max;
+                }
+            }
+        }
+    }
+    return sum;
+}
+
+int MaxSum(int n,int *a)
+{
+    int sum=0,b=0;
+    for(int i=0; i<n; i++)
+    {
+        if(b>0)
+        {
+            b+=a[i];
+        }
+        else
+        {
+            b=a[i];
+        }
+        if(b>sum)
+        {
+            sum = b;
+        }
+    }
+    return sum;
+}
+
+
+
+
+   

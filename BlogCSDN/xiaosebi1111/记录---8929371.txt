@@ -1,0 +1,4 @@
+
+
+今天调试vc的时候，用quickwatch监视的时候，老是提示CXX0017: Error: symbol XXt" not found等等类&#20284;的错误，网上google之后，找到两个解决的办法，一个就是rebuild all，另一个是关闭优化。
+   

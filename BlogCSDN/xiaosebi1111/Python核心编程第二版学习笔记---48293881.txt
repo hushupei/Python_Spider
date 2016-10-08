@@ -1,0 +1,67 @@
+
+        最近闲来无事，就翻了翻几年前买的一本《python核心编程（第二版）》，想学习一下python，然后在编写第三章例3.1
+时发现书上的代码是错误的。大家可以自己编写一下。然后自己修改了下，如下：
+
+
+#/usr/bin/env python
+
+
+'makeTextFile.py -- create text file'
+
+
+import
+ os
+
+ls = os.linesep
+
+#get file name
+
+while
+ True
+:
+    fname = raw_input('Enter a filename:'
+)
+    if
+ os.path.exists(fname):
+        print
+ "Error: '%s' already exists"
+ % fname
+    else
+:
+        break
+
+
+all = []
+print
+ "\n Enter lines ('.' by itself to quit).\n"
+
+#loop until user terminates input
+
+while
+ True
+:
+     enter = raw_input('>'
+)
+     if
+ enter == '.'
+:
+        break
+
+     else
+:
+        all.append(enter)
+
+
+#write lines to file with proper line-ending
+
+fobj = open(fname,'w'
+)
+fobj.writelines(['%s%s'
+ % (x,ls) for
+ x in
+ all])
+fobj.close()
+print
+ 'Done'
+ 
+

@@ -1,0 +1,83 @@
+
+
+SPFA求单源最短路
+
+
+SPFA是使用了队列优化的单源最短路算法，与Dijkstra不同的是，它可以判断是否图中有负环。
+
+它的实现与dijistra很相&#20284;，据说时间复杂度比dijkstra好
+
+先看一下百度百科上的伪码：
+
+
+
+ProcedureSPFA;
+Begin
+    initialize-single-source(G,s);
+    initialize-queue(Q);
+    enqueue(Q,s);
+    while not empty(Q) do begin
+        u:=dequeue(Q);
+        for each v∈adj[u] do begin
+            tmp:=d[v];
+            relax(u,v);
+            if(tmp<>d[v])and(not v in Q)then enqueue(Q,v);
+        end;
+    end;
+End;
+
+实现代码如下：
+
+
+
+
+int SPFA(int u,int NV,int v)//参数依次：源<span style="font-family: Arial, Helvetica, sans-serif;">点</span><span style="font-family: Arial, Helvetica, sans-serif;">，图节点总数，终点</span>
+{
+    int Queue[N];
+    int Count[N];//记录每个节点入队次数
+    for(int i=1;i<=NV;i++)
+    {
+        dist[i]=MAX;
+        vist[i]=0;
+        Count[i]=0;
+    }
+    int head=0,rear=0;//队头队尾
+    dist[u]=0;
+    Queue[rear++]=u;
+    Count[u]++;
+    vist[u]=1;
+    while(head<rear)
+    {
+        u=Queue[head++];
+        vist[u]=0;//注意这里出队后把标记置回原来的0
+        for(int i=1;i<=NV;i++)
+        {
+            if(dist[u]+Metrix[u][i]<dist[i])//这里是不是很熟悉
+            {
+                dist[i]=dist[u]+Metrix[u][i];
+                if(vist[i]==0)
+                {
+                    Queue[rear++]=i;
+                    vist[i]=1;
+                    Count[i]++;
+                    if(Count[i]>=NV)//这个if是判断负环的
+                    {
+                        return -1;
+                    }
+                }
+            }
+        }
+    }
+    return dist[v];
+}
+
+
+
+
+
+
+
+
+
+
+   

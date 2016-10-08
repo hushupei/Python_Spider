@@ -1,0 +1,19 @@
+
+
+1.数据绑定
+    1）创建一个类person
+    2）new一个对象p1，创建数据上下文txtName.DataContext=p1
+    3）在ZAML进行数据绑定的属性设置Text="{Binding Name}"    
+2.由于普通绑定的控件监听控件的改变事件，所以后台代码改变，界面不会变。
+3.如果对象后台&#20540;改变前台界面跟着改变时，需要实现INotifyPropertyChanged接口
+4.子控件及其以后的子控件都默认继承父控件的DataContext,当然也可以单独改变子控件的Datacontext
+5.winFrom中listBox调用add()方法很落后。WPF用listBox用ItemsSource属性设置对象集合。默认把每一项对象Tostring(）显示，可以设定DisplayMemberPath显示某个属性&#20540;。
+6.listBox属性中selectedItem与selectedValue
+    selectedItem指选中那一行的对象，未选时为null
+    selectedValue指选中那一行的SelectedValuePath标记的&#20540;
+7.DataGrid：
+    1)<DataGrid.Columns>自定义列；AutoGenerateColumns=false禁止自动创建列；
+    2)每列可以设置IsReadOnly禁止编辑，整个表&#26684;也可以统一设置IsReadOnly
+
+    3)DataGridComboBoxColumn。给控件取名字，如果元素没有Name属性，则设置x:Name的colClassName.ItemsSource = classNames;SelectedItemBinding="{Binding ClassName}"
+   

@@ -1,0 +1,55 @@
+
+
+  我们都知道win 7中，打开文件的对话框和浏览文件夹的对话框是不一样的，最近同事有个需求就是将浏览文件夹的对话框做成类&#20284;打开文件对话框一样的界面，然后在网上搜了一下，发现了两种解决的方法。
+
+第一种就是引入第三方库Ookii.Dialogs
+ ，这个库提供了源码以及其调用方式。很简单，做出来的界面如下图：
+
+
+
+
+
+
+
+
+
+
+但是这种方法有个缺陷，就是系统必须是vista以后的系统版本，如果在XP上可能就不奏效了，不过我没在XP上试过，应该是不行的。
+
+
+
+第二种方法就是引入office风&#26684;的对话框，具体方法首先在工程上引入Microsoft Office 15.0 Object Library，Microsoft.Office.Interop.Excel这俩库，前面应该是一个com组件，然后在需要调用对话框的地方敲入如下代码：
+
+
+
+
+
+
+
+Microsoft.Office.Interop.Excel.Application app = new Microsoft.Office.Interop.Excel.Application();
+Microsoft.Office.Core.FileDialog fileDialog = app.get_FileDialog(Microsoft.Office.Core.MsoFileDialogType.msoFileDialogFolderPicker);
+fileDialog.InitialFileName = "c:\\Temp\\"; //something you want
+int nres = fileDialog.Show();
+if (nres == -1) //ok
+{
+    Microsoft.Office.Core.FileDialogSelectedItems selectedItems = fileDialog.SelectedItems;
+
+    string[] selectedFolders = selectedItems.Cast<string>().ToArray();
+
+    if (selectedFolders.Length > 0)
+    {
+        string selectedFolder = selectedFolders[0];
+    }
+}
+
+最终的界面是这样的：
+
+
+
+
+
+这个左上角的图标看起来就有点恶心了，不知道能不能去除掉。
+
+
+
+   

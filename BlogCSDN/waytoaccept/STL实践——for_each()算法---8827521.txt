@@ -1,0 +1,138 @@
+
+
+/************************************************************************/
+/*                          STL算法实践                                 */
+/*                          for_each()算法                              */
+/*    原型 for_each(InputIterator beg,InputIterator end,UnaryProc op)   */
+/* creat by Hoo                                                         */
+/* date 2013/04/20                                                      */
+/* VC++6.0                                                              */
+/* src:标准C++程序库 第九章 侯捷/孟岩 译                                */
+/************************************************************************/
+
+#include <iostream>
+#include <list>
+#include <deque>
+#include <vector>
+#include <set>
+#include <map>
+#include <string>
+#include <algorithm>
+#include <functional>
+#include <numeric>
+using namespace std;
+
+template <class T>
+inline void print_elem(const T& coll,const char* optstr="")
+{
+	typename T::const_iterator pos;
+	cout<<optstr<<endl;
+	for(pos=coll.begin();pos!=coll.end();++pos)
+	{
+		cout<<*pos<<" ";
+	}
+	cout<<endl;
+	
+}
+
+template <class T>
+inline void insert_elem(T& coll,int first,int last)
+{
+	for(int i=first;i<=last;++i)
+	{
+		coll.insert(coll.end(),i);
+	}
+}
+/************************************************************************/
+/*                  test1                                               */
+/************************************************************************/
+
+void print(int elem)
+{
+	cout<<elem<<" ";
+}
+
+/************************************************************************/
+/*                  test2                                               */
+/************************************************************************/
+
+template<class T>
+class addValue
+{
+	private:
+		T theValue;
+	public:
+		addValue(const T& v):theValue(v){}
+	void operator() (T& elem) const
+	{
+		elem+=theValue;
+	}
+};
+
+/************************************************************************/
+/*                  test3                                               */
+/************************************************************************/
+
+class meanValue
+{
+private:
+	long num;
+	long sum;
+public :
+	meanValue():num(0),sum(0){}
+	void operator()(int elem)
+	{
+		num++;
+		sum+=elem;
+	}
+	operator double()
+	{
+		return static_cast<double>(sum)/static_cast<double>(num);
+	}
+};
+
+int main()
+{
+	vector<int> coll;
+	insert_elem(coll,1,9);
+
+/************************************************************************/
+/*                  test1                                               */
+/************************************************************************/
+	cout<<"*******test1******"<<endl;
+	for_each(coll.begin(),coll.end(),	//range
+		print);							//operation
+	cout<<endl;
+
+
+/************************************************************************/
+/*                  test2                                               */
+/************************************************************************/
+	cout<<"*******test2******"<<endl;
+	for_each(coll.begin(),coll.end(),	//range
+		addValue<int>(10));				//operation
+	print_elem(coll);
+	
+	for_each(coll.begin(),coll.end(),	//range
+		addValue<int>(*coll.begin()));	//operation
+	print_elem(coll);
+
+/************************************************************************/
+/*                  test3                                               */
+/************************************************************************/
+	cout<<"*******test3******"<<endl<<endl;
+	coll.clear();
+	insert_elem(coll,1,8);
+	double mv=for_each(coll.begin(),coll.end(),	//range
+		meanValue());							//operation
+	cout<<"mean value:"<<mv<<endl;
+
+
+	return 0;
+}
+
+VC++6.0测试截图
+
+
+
+   

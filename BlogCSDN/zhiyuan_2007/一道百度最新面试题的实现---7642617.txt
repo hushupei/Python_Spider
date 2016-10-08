@@ -1,0 +1,86 @@
+
+
+面试题为：现在有1千万个随机数，随机数的范围在1到1亿之间。现在要求写出一种算法，将1到1亿之间没有在随机数中的数求出来。
+
+解答如下：
+
+思路：如果采用最容易想到的方法，那就是双重寻找，一个一个比较，时间复杂度也是0(N的二次方), 不可取。
+
+而如果采用bitset，那么首先空间上多花一部分 , 但是空间复杂度降到了 0（N），速度快了太多
+
+
+采用bitset。直接上代码。
+
+#include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
+#include <string.h>
+typedef unsigned char byte_t;
+int MAX = 100000;
+void gen_rand(int num, int *arr)
+{
+    int i;
+    unsigned long int ran;
+    srand(time(NULL));
+    for (i = 0; i < num; i++)
+    {
+        ran = rand() % MAX;
+        arr[i] = ran;
+     }
+}
+void noexist_bitset(int a[], int num)
+{
+    printf("bitset method result:\n");
+    byte_t bitarray[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+    int mem_count = num / 8 + 1;
+    unsigned char *bitset = (unsigned char *)malloc(sizeof(char) * mem_count);
+    memset(bitset, 0, sizeof(char) * mem_count);
+    int i = 0;
+    int last_servel =  num % 8;
+    unsigned char *cur_ptr = bitset + num / 8;
+    for (; i < 8 - last_servel; i++) //set 1 for last several need't bit 
+    {
+        *cur_ptr |= bitarray[8 - i - 1];
+    }
+    i = 0;
+    int cur_pos;
+    int offset;
+    for (; i < num; i++)
+    {
+        cur_pos = a[i] / 8;
+        offset = a[i] % 8;
+        cur_ptr = bitset + cur_pos;
+        *cur_ptr = *cur_ptr | bitarray[offset];
+    }
+
+    i = 0;
+    for (; i < mem_count; i++)
+    {
+        cur_ptr = bitset + i;
+        int j = 0;
+        for (; j < 8; j++)
+        {
+            unsigned char temp = *cur_ptr;
+            int cmp_value = temp & bitarray[j];
+
+            if (cmp_value == 0)
+                printf("%d\t", i * 8 + j);
+        }
+    }
+    free(bitset);
+    printf("\n");
+}
+int main(int argc, char *argv[])
+{
+    int a[MAX];
+   
+    gen_rand(MAX, a);
+   
+     noexist_bitset(a, MAX);
+
+}
+    
+
+
+
+   

@@ -1,0 +1,81 @@
+
+
+//控件new一个吧
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace _02第三季04连连看棋盘
+{
+    /// <summary>
+    /// MainWindow.xaml 的交互逻辑
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            //Button btn = new Button();
+            //btn.Content = "哈哈哈";
+            //sp1.Children.Add(btn);
+            for(int i=0;i<10;++i)
+            {
+                RowDefinition rowDef = new RowDefinition();//定义行
+                gridGame.RowDefinitions.Add(rowDef);
+                ColumnDefinition colDef = new ColumnDefinition();//定义列
+                gridGame.ColumnDefinitions.Add(colDef);
+            }
+            //for(int i=0;i<10;++i)
+            //{
+            //    for(int j=0;j<10;++j)
+            //    {
+            //        Button btn = new Button();
+            //        btn.Content = i + "," + j;
+            //        Grid.SetColumn(btn, i);
+            //        Grid.SetRow(btn, j);
+            //        gridGame.Children.Add(btn);
+            //    }
+            //}
+            Random randNum = new Random();
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 10; ++j)
+                {
+                    int imageName = randNum.Next(1, 10);//生成1<=iamgeName<10的随机数
+                    Image image = new Image();
+                    image.Source = new BitmapImage(new Uri("Images/" + imageName + ".png", UriKind.Relative));
+                    Grid.SetRow(image, i);
+                    Grid.SetColumn(image, j);
+                    gridGame.Children.Add(image);
+                }
+            }
+        }
+
+        private void sp1_MouseEnter(object sender, MouseEventArgs e)
+        {
+            //Button btn = new Button();
+            //btn.Content = "增加一个控件";//动态增加控件
+            //sp1.Children.Add(btn);
+        }
+    }
+}
+
+
+
+
+   

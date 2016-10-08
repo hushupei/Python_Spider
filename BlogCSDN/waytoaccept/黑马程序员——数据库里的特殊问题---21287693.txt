@@ -1,0 +1,14 @@
+
+
+1.数据库中Null表示不知道，并不等于“”或者0.只能用is null判断
+2.在SQlParameter中如果参数的&#20540;（第二个）为null，则表示没有传递参数会报错，.NET中使用DbNull.Value表示数据库的Null .
+3.三层架构数据库访问层，业务逻辑层，UI层。DAL为简洁版的三层架构。
+4.参数比较多的话，传递比较麻烦，封装到Model中
+5.DAL中不要返回DataTable,DataRow类
+6.先在根节点建用户，然后到数据库下新建用户（选中刚才创建的）
+三层笔记
+1.app.config 要放到UI项目中
+2.DAL层通过configurationManager可以读取到项目中的app.config中的配置信息
+3.引用关系（无BLL层）DAL项目引用Model，UI项目引用Model和DAL
+4.bit类型在sql语句中要写0或1
+   

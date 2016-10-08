@@ -1,0 +1,18 @@
+
+        在Matplotlib实际使用中会有生成不同大小subplots的需求。 
+import numpy as np 
+import matplotlib.pyplot as plt  
+from matplotlib import gridspec 
+x = np.arange(0, 10, 0.2) 
+y = np.sin(x) 
+fig = plt.figure(figsize=(8, 6))  
+gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1])  
+ax0 = plt.subplot(gs[0]) 
+ax0.plot(x, y) 
+ax1 = plt.subplot(gs[1]) 
+ax1.plot(y, x) 
+plt.tight_layout() 
+plt.savefig(‘grid_figure.pdf’)
+
+
+

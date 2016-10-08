@@ -1,0 +1,15 @@
+
+
+修改/etc/sysctl.conf文件
+
+增加
+
+
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.tcp_tw_recycle = 1
+
+然后/sbin/syscntl -p
+
+
+
+   

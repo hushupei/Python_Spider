@@ -1,0 +1,267 @@
+
+
+算法背景，伪代码请参考博客http://www.cnblogs.com/heaad/archive/2010/12/20/1911614.html
+
+
+
+
+
+算法思想，模拟物理的退火过程。区别于爬山算法的关键在于，对于比当前差的解，不是直接舍弃，而是以一定的概率接受。
+
+(主要框架：三个函数+两个准则)
+
+给定初温t=t0，随机产生初始状态s=s0，令k=0；
+
+    Repeat
+
+          Repeat
+
+               产生新状态sj=Genete(s)
+；
+
+               if min{1,exp[-(C(sj)-C(s))/tk]}>=randrom[0,1] 
+   s=sj;
+
+          Until 抽样稳定准则满足
+；
+
+          退温tk+1=update(tk)
+并令k=k+1；
+
+    Until算法终止准则满足
+；
+
+    输出算法搜索结果。
+
+
+
+
+
+
+
+#include <iostream>
+#include <vector>
+#include <iterator>
+#include <algorithm>
+#include <ctime>
+#include <cmath>
+#include <fstream>
+#define CITYNUM 52
+#define MAX 0x7fffffff
+using namespace std;
+struct Point
+{
+&#160; &#160; int x;
+&#160; &#160; int y;
+&#160; &#160; char name;
+};
+//read the graph & compute the distance dist[i][j]
+void InitGraph(double dist[CITYNUM][CITYNUM],Point citys[CITYNUM])
+{
+&#160; &#160; fstream fileRead;
+&#160; &#160; fileRead.open("coords.txt",ios::in);
+&#160; &#160; for(int i=0;i<CITYNUM;i++)
+&#160; &#160; {
+&#160; &#160; &#160; &#160; int temp;
+&#160; &#160; &#160; &#160; char ch;
+&#160; &#160; &#160; &#160; fileRead>>temp>>ch>>citys[i].x>>ch>>citys[i].y>>ch>>citys[i].name;
+&#160; &#160; &#160; &#160; //cout<<temp<<ch<<citys[i].x<<ch<<citys[i].y<<ch<<citys[i].name<<endl;
+&#160; &#160; }
+&#160; &#160; fileRead.close();
+&#160; &#160; for(int i=0;i<CITYNUM;i++)
+&#160; &#160; {
+&#160; &#160; &#160; &#160; for(int j=0;j<CITYNUM;j++)
+&#160; &#160; &#160; &#160; {
+&#160; &#160; &#160; &#160; &#160; &#160; if(j!=i&&dist[i][j]==0)
+&#160; &#160; &#160; &#160; &#160; &#160; {
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; double d2=(citys[i].x-citys[j].x)*(citys[i].x-citys[j].x)+(citys[i].y-citys[j].y)*(citys[i].y-citys[j].y);
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; dist[i][j]=dist[j][i]=sqrt(d2);
+&#160; &#160; &#160; &#160; &#160; &#160; }
+&#160; &#160; &#160; &#160; }
+&#160; &#160; }
+}
+double Evalue(const vector<int> answer,double dist[CITYNUM][CITYNUM])
+{
+&#160; &#160; double sum=0;
+&#160; &#160; for(int i=0;i<answer.size()-1;i++)
+&#160; &#160; {
+&#160; &#160; &#160; &#160; //cout<<answer[i]<<"->"<<answer[i+1]<<":"<<sum<<"+"<<dist[answer[i]][answer[i+1]]<<"="<<sum+dist[answer[i]][answer[i+1]]<<endl;
+&#160; &#160; &#160; &#160; sum+=dist[answer[i]][answer[i+1]];
+&#160; &#160; }
+&#160; &#160; sum+=dist[answer[answer.size()-1]][answer[0]];
+&#160; &#160; return sum;
+}
+void Swap(vector<int> &newAnswer,int first,int second)
+{
+&#160; &#160; newAnswer[first]=newAnswer[first]^newAnswer[second];
+&#160; &#160; newAnswer[second]=newAnswer[first]^newAnswer[second];
+&#160; &#160; newAnswer[first]=newAnswer[first]^newAnswer[second];
+}
+void Reverse(vector<int> &newAnswer,int first,int second)
+{
+&#160; &#160; if(first>second)
+&#160; &#160; {
+&#160; &#160; &#160; &#160; first=first^second;
+&#160; &#160; &#160; &#160; second=first^second;
+&#160; &#160; &#160; &#160; first=first^second;
+&#160; &#160; }
+&#160; &#160; reverse(newAnswer.begin()+first,newAnswer.begin()+second);
+}
+void Save(const vector<int> minAnswer,Point citys[CITYNUM],double t0,double alpha,double te,double minSum)
+{
+&#160; &#160; fstream fileWrite;
+&#160; &#160; fileWrite.open("out.txt",ios::out|ios::app);
+&#160; &#160; fileWrite<<"起始温度："<<t0<<"，终止温度："<<te<<"，降温系数："<<alpha<<"，近似最优："<<minSum<<endl;
+&#160; &#160; for(int i=0;i<minAnswer.size();i++)
+&#160; &#160; {
+&#160; &#160; &#160; &#160; fileWrite<<citys[minAnswer[i]].name<<"->";
+&#160; &#160; }
+&#160; &#160; fileWrite<<citys[minAnswer[0]].name<<endl;
+&#160; &#160; fileWrite.close();
+}
+void SimuAnne(double t0,double alpha,double te )
+{
+&#160; &#160; vector<int> answer,newAnswer,minAnswer;
+&#160; &#160; int k=0;//记录循环次数
+&#160; &#160; double t=t0;
+&#160; &#160; double sumDist=0,newSum=0,minSum=MAX;
+&#160; &#160; double dist[CITYNUM][CITYNUM]={0};
+&#160; &#160; Point citys[CITYNUM];//city's coordinate
+&#160; &#160; InitGraph(dist,citys);
+&#160; &#160; //initial answer
+&#160; &#160; for(int i=0;i<CITYNUM;i++)
+&#160; &#160; {
+&#160; &#160; &#160; &#160; answer.push_back(i);
+&#160; &#160; }
+&#160; &#160; srand ( unsigned (time(0) ) );
+&#160; &#160; random_shuffle(answer.begin(),answer.end());
+&#160; &#160; sumDist=Evalue(answer,dist);
+&#160; &#160; minSum=sumDist;
+&#160; &#160; minAnswer.assign(newAnswer.begin(),newAnswer.end());
+&#160; &#160; cout<<k<<" "<<minSum<<endl;
+&#160; &#160; copy(answer.begin(),answer.end(),ostream_iterator<int>(cout," "));cout<<endl;//输出answer
+&#160; &#160; while(t>te)
+&#160; &#160; {
+&#160; &#160; &#160; &#160; //srand ( unsigned (time(0) ) );
+&#160; &#160; &#160; &#160; newAnswer.assign(answer.begin(),answer.end());
+&#160; &#160; &#160; &#160; int first=0,second=0;
+&#160; &#160; &#160; &#160; //swap first & second
+&#160; &#160; &#160; &#160; first=rand()%CITYNUM;
+&#160; &#160; &#160; &#160; second=rand()%CITYNUM;
+&#160; &#160; &#160; &#160; if(first!=second)
+&#160; &#160; &#160; &#160; {
+&#160; &#160; &#160; &#160; &#160; &#160; //cout<<first<<"--"<<second<<endl;
+&#160; &#160; &#160; &#160; &#160; &#160; Swap(newAnswer,first,second);//产生新的状态
+&#160; &#160; &#160; &#160; &#160; &#160; //Reverse(newAnswer,first,second);//产生新的状态
+&#160; &#160; &#160; &#160; &#160; &#160; newSum=Evalue(newAnswer,dist);
+&#160; &#160; &#160; &#160; &#160; &#160; if(min(1.0,exp(-(newSum-sumDist)/t))>=(rand()%998)/997.0)
+&#160; &#160; &#160; &#160; &#160; &#160; {
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; answer.assign(newAnswer.begin(),newAnswer.end());
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; sumDist=newSum;
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; if(newSum<minSum)
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; {
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; minSum=newSum;
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; minAnswer.assign(newAnswer.begin(),newAnswer.end());
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; cout<<k<<" "<<minSum<<endl;
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; copy(answer.begin(),answer.end(),ostream_iterator<int>(cout," "));cout<<endl;//输出answer
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; }
+&#160; &#160; &#160; &#160; &#160; &#160; &#160; &#160; k++;
+&#160; &#160; &#160; &#160; &#160; &#160; }
+&#160; &#160; &#160; &#160; &#160; &#160; t=t*alpha;
+&#160; &#160; &#160; &#160; }
+&#160; &#160; }
+&#160; &#160; Save(minAnswer,citys,t0,alpha,te,minSum);
+&#160; &#160; for(int i=0;i<minAnswer.size();i++)
+&#160; &#160; {
+&#160; &#160; &#160; &#160; cout<<citys[minAnswer[i]].name<<"->";
+&#160; &#160; }
+&#160; &#160; cout<<citys[minAnswer[0]].name<<endl;
+}
+int main()
+{
+&#160; &#160; double t0=1000;//起始温度
+&#160; &#160; double alpha=0.999999;//降温系数
+&#160; &#160; double te=0.000001;//截止温度
+&#160; &#160; SimuAnne(t0,alpha,te);
+&#160; &#160; return 0;
+}
+
+
+测试数据：
+
+
+
+
+0,1,1,a
+1,1,2,b
+2,1,3,c
+3,1,4,d
+4,1,5,e
+5,1,6,f
+6,1,7,g
+7,1,8,h
+8,1,9,i
+9,1,10,j
+10,2,11,k
+11,7,11,l
+12,12,11,m
+13,17,11,n
+14,22,11,o
+15,27,11,p
+16,32,11,q
+17,37,11,r
+18,42,11,s
+19,47,11,t
+20,52,11,u
+21,57,11,v
+22,62,11,w
+23,67,11,x
+24,72,11,y
+25,77,11,z
+26,82,11,A
+27,87,11,B
+28,92,11,C
+29,97,11,D
+30,101,10,E
+31,101,9,F
+32,101,8,G
+33,101,7,H
+34,101,6,I
+35,101,5,J
+36,101,4,K
+37,101,3,L
+38,101,2,M
+39,100,1,N
+40,95,1,O
+41,90,1,P
+42,85,1,Q
+43,80,1,R
+44,75,1,S
+45,70,1,T
+46,65,1,U
+47,60,1,V
+48,55,1,W
+49,50,1,X
+50,45,1,Y
+51,40,1,Z
+
+
+
+
+
+
+以上算法，循环次数比较多。跟蚁群算法一比被虐成渣（有兴趣的话可以留言交流）。
+
+
+
+起始温度：1e+007，终止温度：1e-006，降温系数：0.999999，近似最优：228.351
+t->s->r->q->p->o->n->j->i->h->g->f->e->d->c->b->a->k->l->m->Z->Y->X->W->V->U->T->S->R->Q->P->O->N->M->L->K->J->I->H->G->F->E->D->C->B->A->z->y->x->w->v->u->t
+起始温度：1000，终止温度：1e-006，降温系数：0.999999，近似最优：225.017
+T->U->V->W->X->Y->Z->q->p->o->a->b->c->d->e->f->g->h->i->j->k->l->m->n->r->s->t->u->v->w->x->y->z->A->B->C->D->E->F->G->H->I->J->K->L->M->N->O->P->Q->R->S->T
+
+
+
+
+
+
+   

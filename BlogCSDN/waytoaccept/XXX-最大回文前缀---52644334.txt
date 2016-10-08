@@ -1,0 +1,38 @@
+
+
+输入一个字符串，求它的最大回文前缀
+
+
+
+
+#include <iostream>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
+using namespace std;
+char str[1000000];
+int main()
+{
+    int i,j,k;
+
+    cin>>str;
+    int len=strlen(str);
+    for(i=len-1;i>=0;i--)
+    {
+        for(k=0,j=i;j>=(i+1)/2;j--,k++)
+        {
+            if(str[k]!=str[j])break;
+        }
+        if(j<(i+1)/2)
+        {
+            cout<<(i+1)<<endl;
+            break;
+        }
+    }
+    return 0;
+}
+
+
+
+
+   

@@ -1,0 +1,58 @@
+
+
+1、sed    '2,5d'    file 显示文件file，除去2-5行，但行数超过文件实际行数时不会报错。
+   sed    '/10[1-4]/d'      file 显示文件file，除去包含101-104的行。
+   sed    '2,$d'            file 显示文件，只显示第一行。sed '2,$!d' file则只显示除第一行外的其它行。
+   sed    '/^ *$/d          file 删除文件中的空行。
+2、sed    -n '/10[1-4]/p'   file 只显示文件file中包含101-104的行。(-n和p必须同时使用，否则只有p时显示全部文件并多显示一次找到的行)
+   sed    -n '5p'           file 只显示文件的第5行
+3、sed 's/moding/moden/g'   file 将moding替换为moden
+4、sed -n 's/^west/north/p' file 将west开头的行替换为north并显示出来。
+5、sed 's/[0-9][0-9][0-9]$/&.5/' file将file文件中以3个数字结尾的行替换为原数字加".5",&代表搜索到的字符串。
+6、sed 's/\(mod\)ing/\1en/g file 将mod做为模式1封装在括号里，然后替换。
+   sed 's/...$//'           file 删除每一行的最后三个字符。
+   sed 's/^...//'           file 删除每一行的头三个字符。
+7、sed 's#moding#moden#g'   file 将moding替换为moden，s后面的#代表搜索串和替换串之间的分界符。
+8、sed -n '/101/,/105/p'    file 显示从101的匹配行到105的匹配行。如果只找到101的匹配行，则从101的匹配行到文件末。
+   sed -n '2,/999/p'        file 显示从第2行到匹配行。
+9、sed '/101/,/105/s/$/  20050119/' file将从101的匹配行到105的匹配行的行末增加"        20050119"内容。
+10、sed -e '1,3d' -e 's/moding/moden/g' file 先删除文件的1-3行，再进行替换。
+    sed -e '/^#/!d'         file 显示文件以#开头的行。
+11、sed '/101/r newfile'    file 在每个匹配行增加文件newfile的内容
+    sed '/101/w newfile'    file 把匹配行写入newfile。
+12、sed '/101/a\ 
+    > ###'                     file 在匹配行后增加一新行。
+    sed '/101/i\
+    > ###'                    file 在匹配行前增加一新行。
+    sed '/101/c\
+    > ###'                    file 用新行替换匹配行。
+
+13、sed 'y/abcd/ABCD/'      file 将a、b、c、d分别替换为ABCD。 
+14、sed '5q'                file 显示到第5行时退出。
+15、sed '/101/{ n; s/moding/moden/g; }' file 在文件中找到匹配行的后一行(n)再进行替换。
+    sed '/101/{ s/moding/moden/g; q; }' file 在文件中找到第一个匹配行后进行替换后再退出。
+16、sed -e '/101/{ h; d; }' -e '/104/{ G; }' file 在文件中找到与101匹配行后先存在一个缓存中，再放在与104匹配行后。
+    sed -e '/101/{ h; d; }' -e '/104/{ g; }' file 在文件中找到与101匹配行后先存在一个缓存中，再替代104的匹配行。
+    sed -e '/101/h' -e '$G'                  file 将最后一个匹配行放在文件末。
+    sed -e '/101/h' -e '$g'                  file 将最后一个匹配行替换文件末行。
+    sed -e '/101/h' -e '/104/x'              file 在文件中找到与101匹配行后先存在一个缓存中，再与104的匹配行进行互换。
+17、sed -f sfile                             file 根据文件sfile的命令列表进行操作。
+    cat sfile
+/101/a\
+####101####\
+****101****
+/104/c\
+####104 deleted####\
+****104 deleted****
+1i\
+####test####\
+****test****
+
+
+
+
+转自http://bbs.chinaunix.net/thread-691881-1-1.html
+
+
+
+   

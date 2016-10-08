@@ -1,0 +1,16 @@
+
+
+文中所使用的Qgis版本为1.8.0
+
+1、在菜单栏中的插件菜单下点击 “Fetch  Python Plugins”；
+
+
+
+
+2、选择“插件下面的”OpenLayers Plugin“点击Install plugin
+
+3、安装成功后
+
+就可以打开Google yahoo 等在线地图了  还是满牛&#36924;的哦
+
+   

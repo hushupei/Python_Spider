@@ -1,0 +1,126 @@
+
+
+算法思想：
+（1）创建图，将每个节点的根节点，标记为-1.
+（2）对图中的边按权重排序
+（3）遍历每条边，获取边两端的根节点
+       如果两个端点的根节点相等，且均是-1，则代表这是一条孤立的边（同时修改目的节点的父节点设为源节点），把这条边计入生成树
+       如果两个端点的根节点相等，且不是-1（可能是-2，-3，之类），这说明加入这条边构成环路，不需要任何操作
+       如果两个端点的根节点不相等，这说明这条边连接了两棵树，（同时修改目的节点根节点的父节点设为源节点），把这条边计入生成树
+注：其实我们知道最小生成树，共有n-1条边（n为节点数），所以，当生成树加入的边数为n-1,算法就可以停止了。
+对边排序复杂度O(elg(e))，最后构建生成树的过程也是O(elg(e))
+时间复杂度O(elg(e))
+
+
+#include <iostream>
+#include<cstring>
+#include<cstdlib>
+#include <vector>
+#include <algorithm>
+using namespace std;
+/*
+6 9
+0 1 34
+1 4 12
+0 5 19
+4 5 26
+0 2 46
+2 5 25
+3 5 25
+2 3 17
+3 4 38
+
+*/
+//class
+struct Edge
+{
+    int from ;
+    int to;
+    int cost;
+};
+class Kruskal
+{
+    private :
+        vector<Edge> myEdges;//store the edges
+        vector<int> parent;//union set tree
+        vector<Edge> spanTree;//store the result
+        int treeflag;//different root of union tree
+    public :
+        Kruskal(){treeflag=-2;};
+        void CreateGraph(const int nodeNum,const int edgeNum);
+        static bool Cmp(const Edge& e1,const Edge& e2);//used for sort
+        int GetRoot(const int k);
+        void SpaningTree();
+        void ShowSpantree();
+        ~Kruskal(){};
+};
+
+bool Kruskal::Cmp(const Edge& e1,const Edge& e2)
+{
+    return e1.cost<e2.cost;
+}
+void Kruskal::CreateGraph(const int nodeNum,const int edgeNum)
+{
+    parent.resize(nodeNum,-1);
+    for(int i=0;i<edgeNum;i++)
+    {
+        Edge e;
+        cin>>e.from>>e.to>>e.cost;
+        myEdges.push_back(e);
+    }
+    std::sort(myEdges.begin(),myEdges.end(),Cmp);
+}
+int Kruskal::GetRoot(const int k)
+{
+    int pa=k;
+    while(parent[pa]>=0)
+    {
+        pa=parent[pa];
+    }
+    return pa;
+}
+void Kruskal::SpaningTree()
+{
+    for(int i=0;i<myEdges.size()&&spanTree.size()<parent.size();i++)
+    {
+        int pf=GetRoot(myEdges[i].from);
+        int pt=GetRoot(myEdges[i].to);
+        if(parent[pf]==parent[pt])
+        {
+            if(parent[pf]==-1)//find a new tree
+            {
+                parent[pf]=treeflag--;
+                parent[myEdges[i].to]=myEdges[i].from;
+                spanTree.push_back(myEdges[i]);
+            }
+        }
+        else//union the different trees as one tree
+        {
+            parent[pt]=myEdges[i].from;
+            spanTree.push_back(myEdges[i]);
+        }
+    }
+}
+void Kruskal::ShowSpantree()
+{
+    cout<<"start"<<endl;
+    for(int i=0;i<spanTree.size();i++)
+    {
+        cout<<spanTree[i].from<<" "<<spanTree[i].to<<" "<<spanTree[i].cost<<endl;
+    }
+    cout<<"end"<<endl;
+}
+int main()
+{
+
+    int nodeNum,edgeNum;
+    cin>>nodeNum>>edgeNum;
+    Kruskal *krus=new Kruskal();
+    krus->CreateGraph(nodeNum,edgeNum);
+    krus->SpaningTree();
+    krus->ShowSpantree();
+    return 0;
+}
+
+
+   

@@ -1,0 +1,143 @@
+
+
+Dijkstra最短路算法
+
+
+与Floyd算法（求任意两点间最短路）不同，Dijkstra可以求单源最短路径（不含负权）
+
+算法思想：从源点开始逐个把距离源点最近的点，加入到源点可以最快到达的集合中，直到所有的点都加入进来。
+
+时间复杂度O(n^2)
+
+1.初始化。令所有点最短路径dist[i]=MAX,访问标记visit[i]=0
+
+2.令源点dist[s]=0,为了操作的一致性，保证循环第一次选中源点
+
+3.每次选一个节点，总共选择n次
+
+3.1遍历dist[]数组，选最小的那个u加入到可最快到达集合中（第一次是u==s）并记录节点编号
+   
+
+
+3.2 遍历u的所有未被访问的邻接点j，如果dist[u]+Metrix[u][j]<dist[j]，说明通过u到达j更近，则需修改dist[j]
+
+
+
+int Dijkstra(int s,int t,int NV)//NV为图中节点个数，节点编号从1开始
+{
+    int u=s;
+    for(int i=1;i<=NV;i++)
+    {
+        dist[i]=MAX;
+        vist[i]=0;
+    }
+    dist[u]=0;//第一次确保dist[s]最小，保证第一个选中s
+    for(int i=1;i<=NV;i++)
+    {
+        int min_value=MAX;
+        for(int j=1;j<=NV;j++)//在dist[]中选中最小的节点u
+        {
+            if(vist[j]==0&&dist[j]<min_value)
+            {
+                min_value=dist[j];
+                u=j;
+            }
+        }
+        vist[u]=1;
+        //cout<<u<<" ";
+        for(int j=1;j<=NV;j++)//查看并更新u的未被访问的邻接点
+        {
+            if(vist[j]==0&&dist[u]+Metrix[u][j]<dist[j])
+            {
+                dist[j]=dist[u]+Metrix[u][j];
+            }
+        }
+    }
+    return dist[t];
+}
+
+
+
+ 注意：内层循环第二个循环内for 与prim算法的区别
+
+
+列题：http://acm.hdu.edu.cn/showproblem.php?pid=2544
+
+
+
+
+
+#include <iostream>
+#define N 105
+#define MAX 0x03fffffff;
+using namespace std;
+int Metrix[N][N];
+int dist[N];
+int vist[N];
+int Dijkstra(int u,int NV)
+{
+    for(int i=1;i<=NV;i++)
+    {
+        dist[i]=MAX;
+        vist[i]=0;
+    }
+    dist[u]=0;
+    for(int i=1;i<=NV;i++)
+    {
+        int min_value=MAX;
+        for(int j=1;j<=NV;j++)
+        {
+            if(vist[j]==0&&dist[j]<min_value)
+            {
+                min_value=dist[j];
+                u=j;
+            }
+        }
+        vist[u]=1;
+        //cout<<u<<" ";
+        for(int j=1;j<=NV;j++)
+        {
+            if(vist[j]==0&&dist[u]+Metrix[u][j]<dist[j])
+            {
+                dist[j]=dist[u]+Metrix[u][j];
+            }
+        }
+    }
+    return dist[NV];
+}
+int main()
+{
+    int m,n;
+    int s,t,c;
+    while((cin>>n>>m)&&(n||m))
+    {
+        for(int i=1;i<=n;i++)
+        {
+            for(int j=1;j<=n;j++)
+            {
+                if(i==j)
+                {
+                    Metrix[i][j]=0;
+                }
+                else
+                {
+                    Metrix[i][j]=MAX;
+                    Metrix[j][i]=MAX;
+                }
+            }
+        }
+        for(int i=0;i<m;i++)
+        {
+            cin>>s>>t>>c;
+            Metrix[s][t]=c;
+            Metrix[t][s]=c;
+        }
+        cout<<Dijkstra(1,n)<<endl;
+    }
+    return 0;
+}
+
+
+
+
+   

@@ -1,0 +1,89 @@
+
+
+题目：
+
+
+
+有两个序列a,b，大小都为n,序列元素的&#20540;任意整形数，无序；
+
+
+要求：通过交换a,b中的元素，使[序列a元素的和]与[序列b元素的和]之间的差最小。
+
+
+思路：
+
+
+1 两个序列什么时候和差&#20540;最小？
+
+
+我的思考是 （1）两个序列和差&#20540;小于等于1，此事无论怎么交换，肯定无法更小了。
+
+
+                       （2）和&#20540;大的那方任意元素与和&#20540;小的那方任意元素之差不小于两个序列和之差，则无法更小了
+
+
+                                  比如 sum(a) > sum(b)  且 diff = sum(a)-sum(b) , 任意元素之差>=diff 则此时和差&#20540;最小。
+
+
+在此基础上，实现代码如下，但最后还是觉得思路上有问题，因为有可能正好某几个元素之和的差小于diff，这种情况存在吗？
+
+
+代码：
+
+
+from random import randint
+def get_list(num = 5):
+    li = [randint(0, 100) for i in range(num)]
+    return li
+def cal_min_diff(l_max, l_min):
+    while True:
+        l_max.sort(reverse=True)
+        l_min.sort()
+        sum1 = sum(l_max)
+        sum2 = sum(l_min)
+        diff = sum1 - sum2
+        if diff < 0:
+            temp = l_min
+            l_min = l_max
+            l_max = temp
+
+        diff = abs(diff)
+        if diff <= 1:
+            break
+        b_find = False
+        for j in range(len(l_min)):
+            for i in range(len(l_max)):
+                val = l_max[i] - l_min[j]
+                if val < diff and val > 0:
+                    b_find = True
+                    break
+            if b_find == True:
+                break
+        if b_find == False:
+            break
+       temp = l_max[i]
+        l_max[i] = l_min[j]
+        l_min[j] = temp
+    l_max.sort()
+    l_min.sort()
+    return (l_max, l_min, diff)
+if __name__ == '__main__':
+    l1 = get_list(10)
+    l2 = get_list(10)
+    print 'origin data'
+    print l1
+    print l2
+    print '='*20
+    l_max, l_min, min_diff = cal_min_diff(l1,l2)
+    print 'final data'
+    print l_max
+    print l_min
+    print 'the minimal difference is ',min_diff
+
+
+
+
+
+
+
+   

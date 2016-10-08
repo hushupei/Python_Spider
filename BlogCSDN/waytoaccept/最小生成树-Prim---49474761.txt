@@ -1,0 +1,148 @@
+
+
+prim算法
+
+
+不断从不在树上的节点中选择代价最小的一个加入树上，与dijkstra算法非常类&#20284;。
+
+1.初始化.所有节点visit[i]=0，距离dist[i]=MAX，把根root的dist[]置0确保第一次加入树。
+
+2.每次选最小代价的节点加入，共选n次
+
+
+2.1遍历dist[i]选择未被访问且代价最小的节点u
+
+
+2.2遍历u的未被访问的邻接点更新dist[i]数组
+
+
+
+int Prim(int root,int NV)
+{
+    int ret=0,u=root;
+    for(int i=1;i<=NV;i++)
+    {
+        dist[i]=MAX;
+        visit[i]=0;
+        path[i]=i;
+    }
+    dist[u]=0;
+    for(int i=1;i<=NV;i++)
+    {
+        int min_value=MAX;
+        for(int j=1;j<=NV;j++)
+        {
+            if(visit[j]==0&&dist[j]<min_value)
+            {
+                min_value=dist[j];
+                u=j;
+            }
+        }
+        if(min_value==MAX)return -1;
+        visit[u]=1;
+        ret+=dist[u];
+        for(int j=1;j<=NV;j++)
+        {
+            if(visit[j]==0&&Metrix[u][j]<dist[j])
+            {
+                dist[j]=Metrix[u][j];
+                path[j]=u;
+            }
+        }
+    }
+    return ret;
+}
+
+注意比较内层第2个for内if部分与dijkstra算法异同。
+
+http://blog.csdn.net/waytoaccept/article/details/49473567
+
+
+例题：http://acm.hdu.edu.cn/showproblem.php?pid=1233
+
+
+
+
+#include <iostream>
+#include<stdio.h>
+#define N 205
+#define MAX 0x03fffffff
+using namespace std;
+int Metrix[N][N];
+int dist[N];
+int visit[N];
+int path[N];
+
+int Prim(int root,int NV)
+{
+    int ret=0,u=root;
+    for(int i=1;i<=NV;i++)
+    {
+        dist[i]=MAX;
+        visit[i]=0;
+        path[i]=i;
+    }
+    dist[u]=0;
+    for(int i=1;i<=NV;i++)
+    {
+        int min_value=MAX;
+        for(int j=1;j<=NV;j++)
+        {
+            if(visit[j]==0&&dist[j]<min_value)
+            {
+                min_value=dist[j];
+                u=j;
+            }
+        }
+        if(min_value==MAX)return -1;
+        visit[u]=1;
+        ret+=dist[u];
+        for(int j=1;j<=NV;j++)
+        {
+            if(visit[j]==0&&Metrix[u][j]<dist[j])
+            {
+                dist[j]=Metrix[u][j];
+                path[j]=u;
+            }
+        }
+    }
+    return ret;
+}
+int main()
+{
+    int n;
+    while(EOF!=scanf("%d",&n)&&n)
+    {
+        for(int i=1;i<=n;i++)
+        {
+            for(int j=1;j<=n;j++)
+            {
+                if(i==j)
+                {
+                    Metrix[i][j]=0;
+                }
+                else
+                {
+                    Metrix[i][j]=MAX;
+                    Metrix[j][i]=MAX;
+                }
+            }
+        }
+        int s,t,d,Q;
+        Q=n*(n-1)/2;
+        for(int i=0;i<Q;i++)
+        {
+            scanf("%d%d%d",&s,&t,&d);
+            Metrix[s][t]=Metrix[t][s]=d;
+        }
+        int root=1;
+        cout<<Prim(root,n)<<endl;
+    }
+    return 0;
+}
+
+
+
+
+
+   

@@ -1,0 +1,25 @@
+
+
+1、在资源视图下右击，选择引入（inport），插入一张256色的位图资源
+
+2、定位到   void CXXXDlg::OnPaint()，在if()...else()中的else()下添加如下代码：
+   else   
+   {   
+           //CDialog::OnPaint();//要禁止这个调用   
+           CPaintDC   dc(this);   
+           CRect   rect;   
+           GetClientRect(&rect);   
+           CDC   dcMem;   
+           dcMem.CreateCompatibleDC(&dc);   
+           CBitmap   bmpBackground;   
+           bmpBackground.LoadBitmap(IDB_BITMAP);   //IDB_BITMAP是你自己的图对应的ID                     
+           BITMAP   bitmap;   
+           bmpBackground.GetBitmap(&bitmap);   
+           CBitmap   *pbmpOld=dcMem.SelectObject(&bmpBackground);   
+           dc.StretchBlt(0,0,rect.Width(),rect.Height(),&dcMem,0,0,   
+         bitmap.bmWidth,bitmap.bmHeight,SRCCOPY);   
+     } 
+刚试了下效果不错参考百度空间
+
+
+   

@@ -1,0 +1,58 @@
+
+
+前提
+：
+
+        关于 openresty 或者 ngx_lua 请参考：http://openresty.org/en/
+
+问题
+：
+
+        使用openresty读取redis内的数据时，在init_by_lua_file中是不能连接redis的，所以有时候只能在rewrite或者access阶段读取redis数据，用什么办法在初始化阶段读取呢？
+
+解决办法
+：
+
+
+
+
+采用在init阶段调用shell命令的方法，相当于在init阶段，执行一个shell命令，读取redis数据，把读取的文本数据进行解析，即可以实现读取redis数据到nginx中
+
+举例
+：
+
+        1 redis中存在一个hash， 存储数据为：
+
+
+hmset  test_hash f1 v1 f2 v2 f3 v3
+
+
+
+
+        2 init_by_lua_file中读取的代码为：
+
+        local cmd = "redis-cli  hgetall test_hash"
+
+
+
+local f = io.popen(cmd
+)
+
+        local content = f:read("*a")
+
+         f:close()
+
+
+
+
+以上 content中内存即redis中的数据。
+
+
+
+
+需要注意，此处的content是字符串，需要自己重新解析成字典，可以存入变量，也可以存在共享内存中。
+
+
+
+
+   

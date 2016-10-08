@@ -1,0 +1,66 @@
+
+
+本人小白一枚配置说明部分难免有不对或者不合理的部分,欢迎指正.
+
+1.下载源码 http://www.apuebook.com/code3e.html
+
+  
+
+
+2.解压: tar -xzvf src.3e.tar.gz
+
+3.make:新建一个code文件夹, code 下用来存放之前解压的apue.3e和编写的代码文件xxx.c等.在当前目录(apue.3e)下打开终端输入:make
+
+4.在apue.3e中找到   include/apue.h   和    lib/error.c两个文件(一会要用到)
+
+如: /home/hsp/code/apue.3e/include/apue.h
+
+     /home/hsp/code/apue.3e/lib/error.c
+
+
+5.在apue.h文件最后一行前添加:  #include "error.c" 保存
+
+6.拷贝:在终端输入:  cp
+ ./include/apue.h
+ ./lib/error.c
+ /usr/include
+
+
+
+
+
+
+------------测试是否成功---------------
+
+
+1.在code/unix1下新建mydir.c  代码如下:
+
+
+
+#include<dirent.h>
+#include"apue.h"
+int main(int argc, char **argv)
+{
+    DIR  *dp;
+    struct dirent *dirp;
+    if(argc!=2)
+        err_quit("a single argument (the directory name) is required");
+    if( (dp=opendir(argv[1]))==NULL)
+        err_sys("can't open %s",argv[1]);
+    while( (dirp=readdir(dp))!=NULL)
+        printf("%s\t",dirp->d_name);
+    printf("\n");
+    closedir(dp);
+    exit(0);
+}
+
+
+
+
+
+2.在当前目录打开终端输入cc mydir.c可以看到当前目录下新建了一个a.out的文件
+
+3.继续输入./a.out    /  即执行ls  /的功能
+
+
+   

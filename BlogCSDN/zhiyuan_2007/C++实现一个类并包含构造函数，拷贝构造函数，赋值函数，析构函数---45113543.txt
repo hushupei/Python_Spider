@@ -1,0 +1,123 @@
+
+
+前言，在c＋＋面试过程中，最能考察类的基础知识的莫过于写一个具有类的必要函数的类。这个面试题是一些面试官非常喜欢的，不但要写出来，还有很多知识点可以考察。
+
+定义一个类如下
+
+class String {
+    public:
+    String(const char *str=NULL);
+    ~String();
+    String(const String &others);
+    String &operator=(const String &others);
+    void show();
+    private:
+    char *data;
+};
+
+方法实现如下：
+
+String::String(const char *str) {
+    if (NULL == str) {
+        data = new char[1];
+        data[0] = '\0';
+    }else {
+        data = new char[strlen(str) + 1];
+        strcpy(data, str);
+    }
+
+}
+
+String ::String(const String &others) {
+    if (&others != this) {
+        data = new char[strlen(others.data) + 1];
+        strcpy(data, others.data);
+    }
+}
+
+String &String::operator=(const String &others) {
+    if (&others == this)
+        return *this;
+    delete []data;
+    data = new char[strlen(others.data) + 1];
+    strcpy(data, others.data);
+    return *this;
+}
+
+void String::show() {
+    printf("data: %s\n", data);
+}
+
+
+String ::~String() {
+    delete []data;
+}
+
+
+写到这里，基础的知识点用到了不少，但是如果面试继续问如下的问题呢
+
+1 写一个静态的成员变量
+
+2 写一个const类型的成员变量
+
+3 写一个引用类型的成员变量
+
+4 String a; String b = a (调用的是哪个函数？）
+
+还能不能继续写下去呢？
+
+1 静态成员函数，可以在类内部声明 比如 static  int  count； 
+
+2 const成员变量，在类内部声明， 但是必须在构造函数采用初始化列表进行初始化，比如 const int max；
+
+3 引用成员， int &ref， int aa； 初始化如下，别忘了，所有构造函数都必须初始化，包括拷贝构造函数
+
+   String::String(const char *str):<span style="color:#ff0000;">max(100),ref(aa)</span>{
+    if (NULL == str) {
+        data = new char[1];
+        data[0] = '\0';
+    }else {
+        data = new char[strlen(str) + 1];
+        strcpy(data, str);
+    }
+
+}
+
+
+
+4 String b ＝ a , 调用的是拷贝构造函数， 而不是赋&#20540;函数
+，此处经常有人答错。
+5 String  a, b ; a = b 此时调用的才是赋&#20540;函数。
+
+
+
+有些时场合初始化列表是不可或缺的，以下几种情况时必须使用初始化列表
+
+
+     1 
+
+常量成员，因为常量只能初始化不能赋&#20540;，所以必须放在初始化列表里面
+
+
+    2 引用类型，引用必须在定义的时候初始化，并且不能重新赋&#20540;，所以也要写在初始化列表里
+
+
+    3 没有默认构造函数的类类型，因为使用初始化列表可以不必调用默认构造函数来初始化，而是直接调用拷贝构造函数初始化。
+
+
+最后特别说明的一点是， 初始化列表的赋&#20540;顺序是按照成员变量在类中的定义的顺序，而不是初始化列表的顺序
+。
+
+class Test {
+    int i;
+    int j;
+    Test(int x) :j(x),i(j) {}
+};
+
+这里的i是未知的，因为声明时i在j前，所以初始化列表中先给i赋&#20540;，但是此时j的&#20540;还未知，所以，最好按照成员定义的顺序进行初始化。
+
+
+
+
+
+   

@@ -1,3 +1,31 @@
+
+
+学python爬虫，请参考这篇博客http://cuiqingcai.com/1052.html
+
+
+这个介绍的很清晰一些，绝对是良心教程，再次感谢博主！
+
+另感觉爬虫用的比较多的是正则表达式的匹配，这里有个表（来自于CSDN，总结的很好）
+
+http://cuiqingcai.com/977.html
+
+
+
+然后敲了一遍糗事百科的代码可惜没调通，不过原理弄明白了
+
+这里找到了一个能运行的代码https://github.com/zzanswer/QSBK/blob/master/QSBK.py
+
+
+接着就想爬CSDN的博客了，后来干脆想保存下来
+
+总结一下：准备连接——请求——响应——读——写（保存）
+
+最后字符编码问题也容易出错：数据编码、开发环境编码、文件读写编码
+
+代码还需要优化：用户至少要一个类，加入多线程，同时下载多个用户博客
+
+
+
 # -*- coding: utf-8 -*-
 import os
 import sys
@@ -29,7 +57,6 @@ class CSDN:
 			#print pageCode
 			if not pageCode:
 				return None
-			#这两句是取总的博客篇数，有的博客没有，如果没有：总=原创+转载+译文篇数，参见改进版
 			pattern=re.compile('class="pagelist">.*?<span>\s(\d+).*?</span>',re.S)
 			item=re.findall(pattern,pageCode)
 			totalArticles=item[0]
@@ -101,7 +128,7 @@ class CSDN:
 		text = re.sub(replace,"\r\n",text)
 		replace = re.compile('<.*?>')
 		text = re.sub(replace,"",text)
-		rTermsDict={'&lt;':'<','&gt;':'>','&amp;':'&','&quot;':'"','&nbsp;':' ','&#39;':'\''}
+		rTermsDict={'<':'<','>':'>','&':'&','"':'"','&#160;':' '}
 		for item in rTermsDict.keys():
 			replace = re.compile(item)
 			text = re.sub(replace,rTermsDict[item],text)
@@ -145,3 +172,9 @@ spider = CSDN()
 spider.start()
 
 
+
+
+
+
+
+   

@@ -1,0 +1,22 @@
+
+
+自从诺基亚出了Qt4.6.0之后，想将Qt集成到vs2008中就方便多啦。。。。不用以前苦&#36924;的编译那么几个小时了！！因为qt官网已经发布了vs2008编译好的库了，直接安装之后就可以再vs上开发Qt程序啦，这对我这种菜鸟来说无疑是个好消息啊！O(∩_∩)O哈哈~
+
+具体步骤如下
+
+1、下载qt-win-opensource-4.6.2-vs2008.exe(
+http://get.qt.nokia.com/qt/source/qt-win-opensource-4.6.2-vs2008.exe
+)，以及qt-
+ vs-addin-1.1.4.exe(http://get.qt.nokia.com/vsaddin/qt-vs-addin-1.1.4.exe
+)
+
+
+2、先安装qt-win-opensource-4.6.2-vs2008.exe，然 后安装qt-vs-addin-1.1.4.exe。
+3、新建系统环境变量QTDIR，设置为刚才安装qt-win-opensource- 4.6.2-vs2008.exe的路径，例如C:\Qt\4.6.0。
+4、安装完成，打开VS2008就可以新建Qt工程了。（注意vs2008必须得打了sp1补丁哦）
+
+
+是不是很简单？
+
+
+   

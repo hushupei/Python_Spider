@@ -1,0 +1,42 @@
+
+
+原文http://www.cnblogs.com/txlstars/articles/5400352.html
+
+
+证明过程请参照原文，递推式f[n] = (f[n-1] + k) mod n
+
+
+f[n]为n个人组成环，最后退出的那个人，序号从0开始。K代表每个K个人退出
+
+
+
+
+
+Josephus(N, K):
+    f[1] = 0
+    For i = 2 .. N
+        f[i] = (f[i - 1] + K) mod i
+    End For
+    Return f[N]
+
+
+
+
+
+Josephus(N, K):
+    ret = 0
+    For i = 2 .. N
+        ret = (ret + K) mod i
+    End For
+    Return ret
+
+
+
+
+
+
+继续优化请看这：http://www.cnblogs.com/void/archive/2011/04/21/2024377.html
+
+
+
+   

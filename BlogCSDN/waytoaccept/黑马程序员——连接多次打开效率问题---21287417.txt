@@ -1,0 +1,48 @@
+
+
+1.比较下面代码，两段代码执行时间差不多，代码一中使用了连接复用（每次并不是真正关闭，连接池）
+    1）每插入一条数据，连接打开“关闭”
+     string[] telNum = File.ReadAllLines(ofd.FileName, Encoding.Default).ToArray();
+    //            for (int i = 1; i < telNum.Count(); ++i)
+    //            {
+    //                string[] strs = telNum[i].Split('\t');//Tab键转义为“\t”
+    //                string telnum = strs[0];
+    //                string telarea = strs[1];
+    //                string teltype = strs[2];
+    //                string areanum = strs[3];
+    //                SqlHelper.ExecuteNonQuery(sql,
+    //                    new SqlParameter("@TelNum", telnum),
+    //                    new SqlParameter("@TelNumArea", telarea),
+    //                    new SqlParameter("@TelNumType", teltype),
+    //                    new SqlParameter("@AreaNum", areanum));
+    //            }
+
+
+    2）一次打开，插入完成再关闭
+     string[] telNum = File.ReadAllLines(ofd.FileName, Encoding.Default).ToArray();
+            using (SqlConnection conn = new SqlConnection("Data Source=.;Initial Catalog=stu;User ID=sa;Password=tao201415shu"))
+            {
+                conn.Open();
+                using(SqlCommand cmd=conn.CreateCommand())
+                {
+                   
+                    
+                    for (int i = 1; i < telNum.Count(); ++i)
+                    {
+                        string[] strs = telNum[i].Split('\t');//Tab键转义为“\t”
+                        string telnum = strs[0].Trim('"');
+                        string telarea = strs[1].Trim('"');
+                        string teltype = strs[2].Trim('"');
+                        string areanum = strs[3].Trim('"');
+                        //cmd.Parameters.Add(new SqlParameter("@TelNum", telnum));
+                        //cmd.Parameters.Add(new SqlParameter("@TelNumArea", telarea));
+                        //cmd.Parameters.Add(new SqlParameter("@TelNumType", teltype));
+                        //cmd.Parameters.Add(new SqlParameter("@AreaNum", areanum));
+                        //AddParams(cmd, strs);
+                        sql = "insert into T_TelNumSearch(TelNum,TelNumArea,TelNumType,AreaNum)values('"+telnum+"','"+telarea+"','"+teltype+"','"+areanum+"')";
+                        cmd.CommandText = sql;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+   

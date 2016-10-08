@@ -1,0 +1,195 @@
+
+        基于：和nginx-rtmp的点播系统
+
+
+步骤如下： 
+1.  安装openresty和nginx-rtmp模块 
+2.  下载视频播放器jwplayers（免费版）并配置 
+3.   配置nginx.conf 和访问页面 
+4.  运行并解决问题
+
+
+
+安装openresty和nginx-rtmp模块 
+openresty官网：http://openresty.org/en/
+ 
+nginx-rtmp下载：https://github.com/arut/nginx-rtmp-module
+ 
+[把下载后的nginx-rtmp模块转移到openresty的bundle/other_modules下] 
+编译安装nginx的命令： 
+./configure –prefix=/usr/local –add-module=/opt/q/openresty-1.9.7.3/bundle/other_modules/nginx-rtmp-module-1.1.8  
+–with-http_ssl_module
+
+
+make 
+make install 
+\cp -r /opt/q/openresty-1.9.7.3/bundle/nginx-1.9.7/conf/* /usr/local/nginx/conf/ 
+如果没有错误，则nginx和nginx-rtmp都安装成功。
+
+
+下载视频播放器jwplayers（免费版）并配置
+
+
+下载jwplayer：http://www.longtailvideo.com/players/jw-flv-player
+ 
+解压到：/usr/local/nginx/html目录下 
+并创建一个点播页面play.html,如下代码： 
+说明
+：jwplayer.key 是在jwplayer页面注册用户后，会自动分配的一个key。 
+file:’rtmp://10.36.17.23/vod/yanqihu.mp4’ 是中vod是rmtp的application名字，yanqihu.mp4就是application里对应的一个视频。
+
+
+
+
+
+<html
+>
+
+  <head
+>
+
+    <script
+ src
+="/jwplayer/jwplayer.js"
+>
+
+</script
+>
+
+  </head
+>
+
+
+<script
+ type
+="text/javascript"
+>
+jwplayer.key="m45nUkNHSn+EoSrqdw9zsMd1NfzQgNVLNs8pnQ=="
+;
+
+</script
+>
+
+<body
+>
+
+  <div
+ id
+='my-video'
+>
+</div
+>
+
+  <script
+ type
+='text/javascript'
+>
+
+    jwplayer('my-video'
+).setup({
+      file:'rtmp://10.36.17.23/vod/yanqihu.mp4'
+,
+      fallback:'false'
+
+    });
+  
+</script
+>
+
+</body
+>
+
+</html
+>
+
+
+
+
+
+
+配置nginx.conf 和访问页面
+
+
+
+
+    #配置通过浏览器访问的web页面
+
+   server {
+       listen
+       8181
+;
+       server_name  localhost;
+
+       location / {
+           root   html;
+           index
+  index
+.html index
+.htm;
+       }
+
+       error_page   500
+ 502
+ 503
+ 504
+  /50
+x
+.html;
+       location = /50x.html {
+           root   html;
+       }
+   }
+
+   #配置rtmp状态页， 通过:8182/stats
+可以查看服务器状态
+  server {
+       listen
+      8182
+;
+
+       location /stat
+ {
+           rtmp_stat all;
+           rtmp_stat_stylesheet stat
+.xsl;
+       }
+
+       location /stat
+.xsl {
+           root /opt/q
+/openresty-1.9
+.7.3
+/bundle/other_modules/nginx-rtmp-module-1.1
+.8
+/;  #在nginx-rtmp-module源码根目录
+
+       }
+   }
+}
+#rtmp点播配置
+
+rtmp {
+   server {
+        listen
+ 1935
+;
+        chunk_size 4000
+;
+        application  vod {
+                play /usr/local
+/nginx/vod/flvs;  #点播文件存储目录
+
+        }
+    }
+}
+
+
+
+
+运行并解决问题 
+ 运行nginx, /usr/local/nginx/sbin/nginx 
+ 访问：http://10.36.17.23:8181/play.html
+ 
+ 截图：
+
+

@@ -1,0 +1,173 @@
+
+
+第二最短路径
+
+
+
+有句古话叫“不破不立”，这个思想跟次短路也就是第二最短路的思想一样。
+
+算法思想：计算原图的最短路，并保存路径。一一破坏最短路中的每一条边，重新计算最短路，并排序。最小的那个就是第二最短路。
+
+1.用dijkstra计算u->v的最短路径，保存路径上的每条边
+
+2.依次删除最短路径上的每一条边（每次删一条），重新计算新的u->v最短路径（新的最短路>=原最短路）
+
+3.把所有新的最短路排序，最小的那个就是第二最短路（这里存在第二最短路可能与原最短路相同，根据题目要求选择即可）
+
+
+
+#include <iostream>
+#define N 205
+#define MAX 0x03fffffff
+using namespace std;
+int Metrix[N][N];
+int dist[N];
+int vist[N];
+int path[N];
+
+struct edge
+{
+    int s,t,cost;
+}E[N];
+void OutPath(int s,int t,int NV)//输出路径
+{
+    for(int i=1;i<=NV;i++)
+    {
+        cout<<path[i]<<" ";
+    }
+    cout<<endl;
+    int u=s,v=t;
+    while(v!=s)
+    {
+        cout<<v<<"-->";
+        v=path[v];
+    }
+    cout<<u<<endl;
+}
+int Dijkstra(int s,int t,int NV)
+{
+    int u=s,v=t;
+    for(int i=1;i<=NV;i++)
+    {
+        dist[i]=MAX;
+        vist[i]=0;
+    }
+    for(int i=1;i<=NV;i++)
+    {
+        path[i]=i;
+    }
+    dist[u]=0;
+    for(int i=1;i<=NV;i++)
+    {
+        int min_value=MAX;
+        for(int j=1;j<=NV;j++)
+        {
+            if(vist[j]==0&&dist[j]<min_value)
+            {
+                min_value=dist[j];
+                u=j;
+            }
+        }
+        vist[u]=1;
+        //cout<<u<<" ";
+        for(int j=1;j<=NV;j++)
+        {
+            if(vist[j]==0&&dist[u]+Metrix[u][j]<dist[j])
+            {
+                dist[j]=dist[u]+Metrix[u][j];
+                path[j]=u;
+            }
+        }
+    }
+    if(dist[t]==MAX)return -1;
+    return dist[t];
+}
+
+void SP2th(int s,int t,int NV)//NV为节点数
+{
+    int flag=Dijkstra(s,t,NV);//求最短路
+    if(flag==-1)
+    {
+        cout<<"不可达"<<endl;
+    }
+    else
+    {
+        int u=s,v=t,arcNum=0;
+        while(v!=u)//保存最短路到E[i]
+        {
+            cout<<v<<"-->";
+            E[arcNum].s=v;
+            E[arcNum].t=path[v];
+            E[arcNum].cost=Metrix[v][path[v]];
+            arcNum++;
+            v=path[v];
+        }
+        cout<<u<<endl;
+        cout<<":"<<dist[t]<<endl;
+        int min_SP=MAX;
+        for(int i=0;i<arcNum;i++)
+        {   //删除E[i]
+            u=E[i].s;
+	    v=E[i].t;
+            Metrix[u][v]=Metrix[v][u]=MAX;
+            flag=Dijkstra(s,t,NV);//重新计算最短路
+            if(flag==-1)
+            {
+                cout<<"不可达"<<endl;
+            }
+            else
+            {
+                OutPath(s,t,NV);
+                cout<<":"<<dist[t]<<endl;
+                if(min_SP>dist[t])min_SP=dist[t];
+            }
+            Metrix[u][v]=Metrix[v][u]=E[i].cost;
+        }
+        cout<<"次短路："<<min_SP<<endl;
+    }
+}
+int main()
+{
+    int m,n;//n为节点数，m为边数
+    int s,t,c;
+    while((cin>>n>>m))
+    {
+        for(int i=1;i<=n;i++)
+        {
+            for(int j=1;j<=n;j++)
+            {
+                if(i==j)
+                {
+                    Metrix[i][j]=0;
+                }
+                else
+                {
+                    Metrix[i][j]=MAX;
+                    Metrix[j][i]=MAX;
+                }
+            }
+        }
+        for(int i=0;i<m;i++)//每条路的代价
+        {
+            cin>>s>>t>>c;
+            if(c<=Metrix[t][s])Metrix[s][t]=Metrix[t][s]=c;
+        }
+        cin>>s>>t;//源和目的
+        for(int i=1;i<=n;i++)
+        {
+            for(int j=1;j<=n;j++)
+            {
+                cout<<Metrix[i][j]<<" ";
+            }
+            cout<<endl;
+        }
+        SP2th(s,t,n);<span style="font-family: Arial, Helvetica, sans-serif;">//求s->t的次短路</span>
+    }
+    return 0;
+}
+
+
+
+
+
+   

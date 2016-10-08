@@ -1,0 +1,73 @@
+
+
+1 关于edns-client-subnet 可以参考 draft
+
+
+2 edns-client-subnet 主要目的就是用用户的真实ip地址而不是用户的dns服务器地址来进行dns查询，在DNS智能调度，CDN等技术有用处。
+
+3 bind9.10 已经实现了edns-client-subnet, 但是只是在其中一个commit上找到了，还没有release。没有在其他v9_10_1_patch, v9_10_2_patch上发现
+
+所以只能通过checkout源码安装测试。
+
+4 项目源码：git clone https://source.isc.org/git/bind9.git
+
+5 ecs commit 对象：  git checkout d46855caedd5cb101795707f6f467fa363ef1448
+
+6 ./configure  && make 
+
+
+7 配置acl， 需要在ip段前指定 ecs关键字,  不指定的按照正常流程查询。
+acl "local" {
+    ecs 127.0.0.1;
+    ::1;
+    20.17.9.0/24;
+    10.0.0.0/8;
+};
+acl "beijing" {
+    22.2.0.0/16;
+    ecs 23.2.0.0/16;
+    ecs 220.2.2.0/24;
+};
+
+acl "shanghai" {
+    ecs 11.1.0.0/16;
+    ecs 13.1.0.0/16;
+    ecs 110.1.1.0/24;
+};
+8 结果如下， 此版本的编译后的dig已经实现了edns-client-subnet功能，所以可以直接使用。
+
+
+dig @localhost -p 2053 www.abc.com a +subnet=23.2.0.1 （有ecs关键字）
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+; CLIENT-SUBNET: 23.2.0.1/32/16
+;; QUESTION SECTION:
+;www.abc.com.			IN	A
+
+;; ANSWER SECTION:
+www.abc.com.		3600	IN	A	22.2.3.3
+www.abc.com.		3600	IN	A	22.2.3.2
+www.abc.com.		3600	IN	A	22.2.3.1
+www.abc.com.		3600	IN	A	22.2.3.4
+
+
+dig @localhost -p 2053 www.abc.com a +subnet=22.2.0.1 （无ecs关键字）
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+; CLIENT-SUBNET: 22.2.0.1/32/0
+;; QUESTION SECTION:
+;www.abc.com.			IN	A
+
+;; ANSWER SECTION:
+www.abc.com.		3600	IN	A	99.2.3.3
+www.abc.com.		3600	IN	A	99.2.3.2
+www.abc.com.		3600	IN	A	99.2.3.1
+www.abc.com.		3600	IN	A	99.2.3.4
+
+9 参考
+
+https://source.isc.org/cgi-bin/gitweb.cgi?p=bind9.git;a=commit;h=d46855caedd5cb101795707f6f467fa363ef1448
+
+
+
+   

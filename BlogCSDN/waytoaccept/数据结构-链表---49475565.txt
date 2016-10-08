@@ -1,0 +1,285 @@
+
+
+链表相关算法：增删改查+创建+销毁
+
+#include <stdio.h>
+#include<stdlib.h>
+typedef struct Node
+{
+    int data;
+    Node *next;
+} LNode,*LinkList;
+
+//LinkList Operations:
+
+//Create LinkList At Head
+void CreateLinkAtHead(LinkList &L)
+{
+    if(L==NULL)
+    {
+        L=(LinkList)malloc(sizeof(LNode));
+        L->next=NULL;
+    }
+    int n;
+    scanf("%d",&n);
+    while(n!=-1)
+    {
+        LNode *p=(LNode *)malloc (sizeof(LNode));
+        p->data=n;
+        p->next=L->next;
+        L->next=p;
+        scanf("%d",&n);
+    }
+}
+//Create LinkList At Tail
+void CreateLinkAtTail(LinkList &L)
+{
+    if(L==NULL)
+    {
+        L=(LinkList)malloc(sizeof(LNode));
+        L->next=NULL;
+    }
+    LNode *Tail=L;
+    while(Tail->next)
+    {
+        Tail=Tail->next;
+    }
+    int n;
+    scanf("%d",&n);
+    while(n!=-1)
+    {
+        LNode *p=(LNode *)malloc (sizeof(LNode));
+        p->data=n;
+        p->next=NULL;
+        Tail->next=p;
+        Tail=p;
+        scanf("%d",&n);
+    }
+}
+//visit every element of LinkList
+void VisitLink(LinkList L)
+{
+    LNode*p=L;
+    while(p&&p->next)
+    {
+        printf("%d ",p->next->data);
+        p=p->next;
+    }
+    printf("\n");
+}
+//crash the LinkList
+void CrashLink(LinkList &L)
+{
+    LNode*p=L,*q=NULL;
+    while(p&&p->next)
+    {
+        q=p->next;
+        p->next=q->next;
+        free(q);
+        q=NULL;
+    }
+    if(p)
+    {
+        free(p);
+        p=NULL;
+    }
+    L=NULL;
+    printf("Crash finished!\n");
+}
+//delete element of X
+int Delete_X(LinkList &L,int x)
+{
+    int count=0;
+    LNode *p=L,*q=NULL;
+    while(p&&p->next)
+    {
+        if(p->next->data==x)
+        {
+            q=p->next;
+            p->next=q->next;
+            free(q);
+            count++;
+            q=NULL;
+        }
+        else
+        {
+            p=p->next;
+        }
+    }
+    return count;
+}
+//delete i_th element
+bool Delete_i(LinkList &L,int &e,int i)
+{
+    bool IsDelete=false;
+    if(i<=0)return IsDelete;
+    int j=0;
+    LNode *pre=L,*p=NULL;
+    while(pre&&pre->next)
+    {
+        j++;
+        if(j==i)
+        {
+            p=pre->next;
+            pre->next=p->next;
+            e=p->data;
+            free(p);
+            p=NULL;
+            IsDelete=true;
+            break;
+        }
+        pre=pre->next;
+    }
+    return IsDelete;
+}
+//Assume that the LinkList at list 1 element
+int Delete_Min(LinkList &L)
+{
+    int min;
+    LNode *minPre,*pre,*p;
+    minPre=pre=L;
+    while(pre->next)
+    {
+        if(pre->next->data<minPre->next->data)
+        {
+            minPre=pre;
+        }
+        pre=pre->next;
+    }
+    min=minPre->next->data;
+    p=minPre->next;
+    minPre->next=p->next;
+    free(p);
+    p=NULL;
+    return min;
+}
+//print the reversed  link
+void Print(LinkList L)
+{
+    if(L->next)
+    {
+        Print(L->next);
+        printf("%d ",L->next->data);
+    }
+
+}
+//逆序
+void Reverse(LinkList& L)
+{
+    LNode *h,*p;
+    h=L->next;L->next=NULL;
+    while(h)
+    {
+        p=h;
+        h=h->next;
+        p->next=L->next;
+        L->next=p;
+    }
+}
+//插入排序ASC
+void InsertSort(LinkList& L)
+{
+	LNode *pre,*p,*h;
+	h=L->next;L->next=NULL;
+	while(h)
+	{
+		p=h;
+		h=h->next;
+		pre=L;
+		while(pre->next&&pre->next->data < p->data)
+		{
+			pre=pre->next;
+		}
+		p->next=pre->next;
+		pre->next=p;
+	}
+}
+//选择排序ASC
+void SelectSort(LinkList& L)
+{
+	LNode *rear,*pre,*p,*minpre,*min;
+	rear=L;//rear及rear 之前已序
+	while(rear->next)
+	{
+		pre=rear;
+		minpre=pre;
+		p=pre->next;
+		while(p)
+		{
+			if(p->data <minpre->next->data)
+			{
+				minpre=pre;
+			}
+			pre=p;
+			p=p->next;
+		}
+		min=minpre->next;
+		minpre->next=min->next;
+		min->next=rear->next;
+		rear->next=min;
+		rear=rear->next;
+	}
+}
+//冒泡排序ASC
+void BBSort(LinkList& L)
+{
+	LNode *pre,*p,*rear;
+	int flag=0;//交换次数
+	rear=NULL;
+	do
+	{
+		flag=0;
+		pre=L;
+		p=pre->next;
+		while(p&&p->next!=rear)
+		{
+			if(p->data>p->next->data)
+			{
+				pre->next=p->next;
+				p->next=pre->next->next;
+				pre->next->next=p;
+				pre=pre->next;
+				flag++;
+			}
+			else
+			{
+				pre=p;
+				p=p->next;
+			}
+		}
+		rear=p;
+	}while(flag!=0);
+}
+//查找链表倒数第K个节点（链表足够长）
+LNode* K_ReverseSort(LinkList L,int k)
+{
+	LNode * p=L,*q=L->next;
+	int i=0;
+	while(p->next)
+	{
+		p=p->next;
+		if(i<k)i++;
+		else q=q->next;
+	}
+	if(i<k)return NULL;
+	else return q;
+}
+//并交叉集（啰）
+int main()
+{
+    LinkList myLink=NULL;
+    CreateLinkAtTail(myLink);
+    VisitLink(myLink);
+    Reverse(myLink);
+    VisitLink(myLink);
+	BBSort(myLink);
+	VisitLink(myLink);
+    CrashLink(myLink);
+    return 0;
+}
+
+
+
+
+
+   

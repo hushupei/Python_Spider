@@ -1,0 +1,99 @@
+
+
+tarjan算法思想：dfs节点的时候，用time[]记录访问顺序，则父节点会先于子节点访问。那么节点u递归的过程中找到了父节点（先访问的），形成一个环路，这个环路上的所有节点就是一个强联通分量。low[]的作用是用强联通分量上的最先访问的节点（访问到的父节点）得time[]作为整个强联通分量所有节点的时间。并且退栈就可以得到强联通分量.
+
+
+每个节点都会入栈一次，每条边访问一次，所以O(M+N)的效率。
+
+
+
+
+
+
+#include <iostream>
+#include<cstring>
+#define Node 100
+using namespace std;
+struct Edge
+{
+    int v,w,next;
+}edge[Node*Node];
+int head[Node];
+int low[Node];  //low[u]表示访问该强联通分量最早的时间
+int time[Node]; //访问节点的时间顺序，标识是否访问过
+int in[Node];   //是否在栈中
+int t=0,n,cnt=0,ret=0;
+int stack[Node],top=0;
+
+void addEdge(int u,int v,int w)//邻接表（头插法）
+{
+    edge[cnt].v=v;edge[cnt].w=w;
+    edge[cnt].next=head[u];head[u]=cnt++;
+}
+void DFS(int u)
+{
+    low[u]=time[u]=++t;
+    stack[top++]=u;
+    in[u]=1;
+    int v;
+    for(int e=head[u];e!=-1;e=edge[e].next) //递归访问邻接点
+    {
+        v=edge[e].v;
+        if(time[v]==0)                      //未访问
+        {
+            DFS(v);
+            if(low[u]>low[v])low[u]=low[v]; //如果u的未访问邻接点v可以到达比u更先访问的节点，则u,v同属与1个强联通分量
+        }
+        else if(in[v]&&low[u]>low[v])       //u找到了比自己更早访问的子节点
+        {
+            low[u]=low[v];
+        }
+    }
+    if(time[u]==low[u])                     //判断是否是强联通分量的第一个节点
+    {
+        cout<<++ret<<":";
+        do
+        {
+            v=stack[--top];
+            in[v]=0;
+            cout<<v<<" ";
+        }while(v!=u);
+        cout<<endl;
+    }
+}
+void Tarjan()
+{
+    memset(in,0,sizeof(in));
+    memset(time,0,sizeof(time));
+    top=0,ret=0;
+    for(int i=1;i<=n;i++)
+    {
+        if(time[i]==0)
+        {
+            DFS(i);
+        }
+    }
+}
+int main()
+{
+    int m;
+    while(cin>>n>>m)
+    {
+        memset(head,-1,sizeof(head));
+        memset(edge,0,sizeof(edge));
+        int s,e,c,cnt=0;
+        for(int i=1;i<=m;i++)
+        {
+            cin>>s>>e>>c;
+            addEdge(s,e,c);
+        }
+        Tarjan();
+    }
+    return 0;
+}
+
+
+
+
+
+   

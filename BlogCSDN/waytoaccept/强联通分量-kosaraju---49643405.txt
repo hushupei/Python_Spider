@@ -1,0 +1,225 @@
+
+
+kosaraju算法思想：利用了这个特点：如果原图中u,v同属于一个强联通分量，则逆图（原图所有的边反向）u,v同属于一个强联通分量。
+
+1.DFS原图按照DFS返回的时间记录节点的访问顺序time[t].
+
+2.每次从time[]选择离开最晚的节点，在逆图中进行DFS，该节点能遍历到的节点位于同一强联通分量，并删除逆图中这些节点。
+
+3.直到time[]中没有节点。
+
+下面是两种不同存储结构的实现
+
+邻接表：
+
+
+
+#include <iostream>
+#include<cstring>
+#define Node 100
+using namespace std;
+struct Edge
+{
+    int v,w,next;
+}edge[Node*Node];
+int head[Node][2];
+int visit[Node];
+int time[Node];
+int t=0,n,cnt=0;
+void addEdge(int u,int v,int w)                 //邻接表构建图与逆图
+{
+    edge[cnt].v=v;edge[cnt].w=w;
+    edge[cnt].next=head[u][0];head[u][0]=cnt++;
+    edge[cnt].v=u;edge[cnt].w=w;
+    edge[cnt].next=head[v][1];head[v][1]=cnt++;
+}
+
+void DFS1(int u)
+{
+    visit[u]=1;
+    for(int e=head[u][0];e!=-1;e=edge[e].next)
+    {
+        int v=edge[e].v;
+        int w=edge[e].w;
+        if(visit[v]==0&&w)
+        {
+            DFS1(v);
+        }
+    }
+    t+=1;
+    time[t]=u;                                  ////所有节点的DFS时间都在其子节点之后，这里暗含了按时间排序的过程
+}
+void DFS2(int u)
+{
+    visit[u]=1;
+    cout<<u<<" ";
+    for(int e=head[u][1];e!=-1;e=edge[e].next)  //逆图中可以到达的节点同属于一个联通分量
+    {
+        int v=edge[e].v;
+        int w=edge[e].w;
+        if(visit[v]==0&&w)
+        {
+            DFS2(v);
+        }
+    }
+    for(int e=head[u][0];e!=-1;e=edge[e].next)
+    {
+        edge[e^1].w=0;                          //删去逆图中与u关联的边（不真正删除）
+    }
+}
+int Kosaraju()
+{
+    int ret=0;
+    memset(visit,0,sizeof(visit));
+    memset(time,0,sizeof(time));
+    t=0;
+    for(int i=1;i<=n;i++)
+    {
+        if(visit[i]==0)
+        {
+            DFS1(i);
+        }
+    }
+    memset(visit,0,sizeof(visit));
+    for(int i=n;i>=1;i--)
+    {
+        int u=time[i];
+        if(visit[u]==0)
+        {
+            ret++;
+            cout<<ret<<":";
+            DFS2(u);
+            cout<<endl;
+        }
+    }
+    return ret;
+}
+int main()
+{
+    int m;
+    while(cin>>n>>m)
+    {
+        memset(head,-1,sizeof(head));
+        memset(edge,0,sizeof(edge));
+        int s,e,c,cnt=0;
+        for(int i=1;i<=m;i++)
+        {
+            cin>>s>>e>>c;
+            addEdge(s,e,c);
+        }
+        Kosaraju();
+    }
+    return 0;
+}
+
+
+
+邻接矩阵
+
+#include <iostream>
+#include<cstring>
+#define MAX 0x3fffffff
+#define Node 100
+using namespace std;
+
+int Matrix[Node][Node];
+int MatrixT[Node][Node];
+int visit[Node];
+int time[Node];
+int t=0,n;
+
+void DFS1(int u)
+{
+    visit[u]=1;
+    for(int i=1;i<=n;i++)
+    {
+        if(visit[i]==0&&Matrix[u][i]!=MAX)
+        {
+            DFS1(i);
+        }
+    }
+    t+=1;
+    time[t]=u;
+}
+void DFS2(int u)
+{
+    visit[u]=1;
+    cout<<u<<" ";
+    for(int i=1;i<=n;i++)
+    {
+        if(visit[i]==0&&MatrixT[u][i]!=MAX)
+        {
+            DFS2(i);
+        }
+    }
+    for(int i=1;i<=n;i++)
+    {
+        MatrixT[i][u]=MAX;
+    }
+}
+int Kosaraju()
+{
+    int ret=0;
+    memset(visit,0,sizeof(visit));
+    memset(time,0,sizeof(time));
+    t=0;
+    for(int i=1;i<=n;i++)
+    {
+        if(visit[i]==0)
+        {
+            DFS1(i);
+        }
+    }
+    memset(visit,0,sizeof(visit));
+    for(int i=n;i>=1;i--)
+    {
+        int u=time[i];
+        if(visit[u]==0)
+        {
+            ret++;
+            cout<<ret<<":";
+            DFS2(u);
+            cout<<endl;
+        }
+    }
+    return ret;
+}
+int main()
+{
+    int m;
+    while(cin>>n>>m)
+    {
+
+        for(int i=1;i<=n;i++)
+        {
+            for(int j=1;j<=n;j++)
+            {
+                if(i==j)
+                {
+                    Matrix[i][j]=0;
+                    MatrixT[i][j]=0;
+                }
+                else
+                {
+                    Matrix[i][j]=MAX;
+                    MatrixT[i][j]=MAX;
+                }
+            }
+        }
+        int s,e,c;
+        for(int i=1;i<=m;i++)
+        {
+            cin>>s>>e>>c;
+            Matrix[s][e]=c;
+            MatrixT[e][s]=c;
+        }
+        Kosaraju();
+    }
+    return 0;
+}
+
+
+
+
+
+   

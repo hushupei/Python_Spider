@@ -1,0 +1,64 @@
+
+
+NPOI是把excel文件作为二进制流来操作，同时也把二进制流文件写入成excel文件格式
+
+1.写excel
+	    HSSFWorkbook workBook = new HSSFWorkbook();
+            ISheet sheet = workBook.CreateSheet("员工表");
+            IRow rowHeader = sheet.CreateRow(0);//表头
+            rowHeader.CreateCell(0, CellType.STRING).SetCellValue("工号");
+            rowHeader.CreateCell(1, CellType.STRING).SetCellValue("姓名");
+            rowHeader.CreateCell(2, CellType.STRING).SetCellValue("性别");
+            rowHeader.CreateCell(3, CellType.STRING).SetCellValue("生日");
+	    using (Stream stream = File.OpenWrite(fileName))
+                {
+                    workBook.Write(stream);
+                }
+2.读excel
+	 FileStream file = new FileStream(Server.MapPath(@"TemFiles\tem.xls"), FileMode.Open, 	 FileAccess.Read); 
+
+	 //根据路径通过已存在的excel来创建HSSFWorkbook，即整个excel文档
+         HSSFWorkbook workbook = new HSSFWorkbook(file);
+
+         //获取excel的第一个sheet
+         HSSFSheet sheet = workbook.GetSheetAt(0);
+ 
+         DataTable table = new DataTable();
+         //获取sheet的首行
+         HSSFRow headerRow = sheet.GetRow(0);
+
+         //一行最后一个方格的编号 即总的列数
+         int cellCount = headerRow.LastCellNum;
+ 
+         for (int i = headerRow.FirstCellNum; i < cellCount; i++)
+         {
+             DataColumn column = new DataColumn(headerRow.GetCell(i).StringCellValue);
+             table.Columns.Add(column);
+          }
+         //最后一列的标号  即总的行数
+         int rowCount = sheet.LastRowNum;
+ 
+         for (int i = (sheet.FirstRowNum + 1); i < sheet.LastRowNum; i++)
+         {
+             HSSFRow row = sheet.GetRow(i);
+　　　　　　　if (row== null)//这一句很关键，因为没有数据的行默认是null
+　　　　　　　{
+　　　　　　　　continue;
+　　　　　　　　}
+
+             DataRow dataRow = table.NewRow();
+ 
+             for (int j = row.FirstCellNum; j < cellCount; j++)
+             {
+                 if (row.GetCell(j) != null)//同理，没有数据的单元格都默认是null
+                dataRow[j] = row.GetCell(j).ToString();
+              }
+ 
+             table.Rows.Add(dataRow);
+         }
+ 
+         workbook = null;
+         sheet = null;
+ 
+
+   

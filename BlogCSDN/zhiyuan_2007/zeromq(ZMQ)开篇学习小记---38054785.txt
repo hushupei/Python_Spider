@@ -1,0 +1,21 @@
+
+
+1 zmq支持的通信协议
+
+  tcp/ipc/inproc/pgm , 创建socket非常简单。 
+
+2 zmq的通信模式
+
+   2.1  请求-应答， 对应socket 类型为 ZMQ_REQ， ZMQ_REP， 一问一答类型。如果ZMQ_REQ当前缓冲超过了高水位标记（HWM）或者当前没有client连接，则zmq_send 阻塞。
+
+   2.2 发布-订阅， 对应socket类型为ZMQ_PUB, ZMQ_SUB, 典型的一对多类型，ZMQ_PUB任何情况下都不会阻塞，这是与其他各种类型socket的典型区别。，ZMQ_SUB如果想要生效，必须通过zmq_setsock进行设置过滤器，过滤器如果为“”， 则表示订阅所有消息，否则就只订阅开头匹配的消息。 实测结果表明，普通类型的PUB/SUB如果PUB端发送量大的时候，会丢消息，理由就是PUB的时候不会关心SUB端是否收到。
+
+   2.3 管道， 对应socket类型为ZMQ_PUSH, ZMQ_PULL,单向流动型，ZMQ_PUSH同样会阻塞。
+
+   2.4 路由， ROUTER和DELEAR， 双向通信的socket， 是REQ/REP的高级方式。
+
+   2.5 PAIR， 用来在进程内通信，属于实验类型的socket。
+
+3 HWM以及高级用法后续研究，未完待续
+
+   

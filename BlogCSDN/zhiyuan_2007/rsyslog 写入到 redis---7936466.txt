@@ -1,0 +1,25 @@
+
+
+最近由于项目需求，如要将syslog中的日志写入到redis数据库，以便实时分析，在网上找了一下，发现github上有一个项目
+
+https://github.com/sami-bouafif/rsyslog-redis/blob/master/README.markdown
+ 实现了syslog日志写入到redis中，按照DEADME中
+
+
+的步骤，进行了安装和编译。期间发现了一些问题，并将最后完成的经验总结如下。
+
+1 安装时 ryslog版本不受限制，虽然README中要求是5.4，但是其他版本也是可以的，虽然patch时候会出现一些rej文件，但是不影响。
+
+2 打完patch后，configure时，生成不了Makefile文件。这个时候需要注意了，自己想办法修改一下configure.ac和makefile.am中关于redis的部分，因为patch
+
+中有遗漏，没有把所有的脚本都打进去。尤其是在AC_CONFIG_FILES内加入plugins/omredis/Makefile。这样才能在omredis中生成Makefile
+
+3 按照以上步骤操作后，configure可以生成Makefile了，但是make的时候会报如下错误
+
+
+
+omredis.c: In function 'queryEtryPt':
+
+omredis.c:242:1: error: 'modGetKeepType' undeclared (first use in this function)
+
+omredis.c:242:1: note: each undeclared identifier is reported only once for each function it appears in

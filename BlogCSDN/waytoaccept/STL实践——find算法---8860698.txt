@@ -1,0 +1,205 @@
+
+
+
+
+/***********************************************************************************/
+
+/*                          STL算法实践                                            */
+
+/*                          find算法                                              */
+
+/*                          find_if算法                                            */
+
+/* 原型 InputIterator find(InputIterator beg,InputIterator end)                    */
+
+/* 原型 InputIterator find_if(InputIterator beg,InputIterator end,CompFuncop)     */
+
+/* creat by Hoo                                                                   */
+
+/* date 2013/04/20                                                                */
+
+/* VC++6.0                                                                        */
+
+/* src:标准C++程序库 第九章侯捷/孟岩译                                           */
+
+/***********************************************************************************/
+
+
+
+#include <iostream>
+
+#include <list>
+
+#include <deque>
+
+#include <vector>
+
+#include <set>
+
+#include <map>
+
+#include <string>
+
+#include <algorithm>
+
+#include <functional>
+
+#include <numeric>
+
+#include <cstdlib>
+
+using namespace std;
+
+ 
+
+template <class T>
+
+inline void print_elem(const T&coll,const char* optstr="")
+
+{
+
+       typenameT::const_iterator pos;
+
+       cout<<optstr<<endl;
+
+       for(pos=coll.begin();pos!=coll.end();++pos)
+
+       {
+
+              cout<<*pos<<"";
+
+       }
+
+       cout<<endl;
+
+       
+
+}
+
+ 
+
+template <class T>
+
+inline void insert_elem(T& coll,intfirst,int last)
+
+{
+
+       for(inti=first;i<=last;++i)
+
+       {
+
+              coll.insert(coll.end(),i);
+
+       }
+
+}
+
+ 
+
+int main()
+
+{
+
+ 
+
+/************************************************************************/
+
+/*                  test1                                              */
+
+/************************************************************************/
+
+       cout<<"************test1*************"<<endl;
+
+       list<int>coll;
+
+       insert_elem(coll,1,9);
+
+       insert_elem(coll,1,9);
+
+       print_elem(coll);
+
+       
+
+       //findfirst element with value 5
+
+       list<int>::iteratorpos1,pos2;
+
+       pos1=find(coll.begin(),coll.end(), //range
+
+              5);                                                    //value
+
+       //findsecond element with 5 
+
+       if(pos1!=coll.end())
+
+       {
+
+              pos2=find(++pos1,coll.end(),5);
+
+       }
+
+ 
+
+       //printall element from first to second 5
+
+       if(pos2!=coll.end())
+
+       {
+
+              copy(--pos1,++pos2,                                  //src range
+
+              ostream_iterator<int>(cout,""));   //dst 
+
+              cout<<endl;
+
+       }
+
+ 
+
+/************************************************************************/
+
+/*                  test2                                             */
+
+/************************************************************************/
+
+       cout<<"************test2*************"<<endl;
+
+       vector<int>collv;
+
+       vector<int>::iteratorpos;
+
+       insert_elem(collv,1,9);
+
+       print_elem(collv,"test2coll:");
+
+       
+
+       //findfist element greater than 3
+
+       pos=find_if(collv.begin(),collv.end(),   //range
+
+              bind2nd(greater<int>(),3));                 //criterion
+
+       //printthe position
+
+       cout<<"the"<<distance(collv.begin(),pos)+1<<". elements the firstgrater than 3"<<endl;
+
+ 
+
+       //findthe first element divisible by 3
+
+       pos=find_if(collv.begin(),collv.end(),not1(bind2nd(modulus<int>(),3)));
+
+       cout<<"the"<<distance(collv.begin(),pos)+1<<". elements the firstdivisible by 3"<<endl;
+
+ 
+
+       return0;
+
+}
+
+ 
+
+
+
+   

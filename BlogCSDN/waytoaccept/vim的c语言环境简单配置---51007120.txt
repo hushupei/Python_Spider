@@ -1,0 +1,33 @@
+
+
+1.进入vimrc
+
+$ vim ~/.vimrc
+
+2.拷贝以下代码置于文件末端(行号,自动换行,括号匹配,关键字高亮)
+
+
+
+ if filereadable("/etc/vim/vimrc.local")
+source /etc/vim/vimrc.local
+endif
+
+syntax on
+set tabstop=4
+set nu!
+set shiftwidth=4
+set autoindent
+set cindent
+set fdm=marker
+
+if &term=="xterm"
+set t_Co=8
+set t_Sb=^[[4%dm
+set t_Sf=^[[3%dm
+endif
+
+
+
+
+
+   

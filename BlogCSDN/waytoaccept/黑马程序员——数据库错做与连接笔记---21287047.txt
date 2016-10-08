@@ -1,0 +1,70 @@
+
+
+数据库连接
+1.本机登录windows验证，如果是单独数据库服务器则需要密码
+2.启用混合验证：sa为最高权限账户
+    1）右键-〉属性-〉安全性-〉启用混合验证-〉重启服务
+    2）启用sa账户：根节点-〉安全性-〉登录名-〉状态 sa启用 -〉常规-〉设置密码。
+3.实现了IDisposible接口的类可以使用using语法自动回收资源。
+    using(类名 变量名=new 类名())
+    {
+        ……//代码块
+    }
+4.using相当重要，如果没有使用using，假如SQL语句发生异常则会造成内存缓慢泄露，或者连接用完。using 内的东西，系统会执行close()和disposible()释放资源。
+    using(SqlConnection conn=new SqlConnection(
+                "Data Source=.; Initial Catalog=stu;User                                ID=sa;Password=tao201415shu"))
+            {
+                conn.Open();//打开数据库连接
+                using(SqlCommand cmd=conn.CreateCommand())
+                {
+                    cmd.CommandText = "insert into T_Student(Name,Age) 
+                                           values('元芳',180)";//SQL命令语句
+                    cmd.ExecuteNonQuery();//执行非查询语句
+                }
+                //MessageBox.Show("连接成功");
+            }
+
+    
+5.cmd.ExecuteReader()一般用于查询结果有多条记录的SQL语句，返回SqlDataReader类型（reader)。且查询结果放在数据库服务器中（远程），没放到客户端，初始时一个指针指向第一条数据之前，执行一次（reader.Read())，指针下移一条，只要没移到最后一条之后，都返回true.
+
+6.C#与SQL中的数据类型
+            C#              SQL
+            int32           int
+            long            bigint
+            bool            bit
+            string          nvarchar
+
+7.ADO.NET中参数化查询的两种写法
+
+推荐使用1）cmd.Parameters.Add(new SqlParameter("@name", txtName.Text));
+           cmd.Parameters.Add(new SqlParameter("@age", Convert.ToInt32(txtAge.Text)));
+
+不推荐    2）cmd.Parameters.AddWithValue("@age", Convert.ToInt32(txtAge.Text));
+
+参数化查询的例子
+insert into …… values(@name,@age)
+delete from ……where Name=@name
+update TableName set Name=@name where Age=@age
+
+@参数不能用来替换表名和select字段&#20540;如：select * from @TableName或者select @name from……
+
+8.SqlDataReader 是连接相关，结果在数据库服务器中，无论结果多少，对程序没影响。如果断开连接，数据不可再度。
+9.DataSet，如果查询结果不是很大可以使用数据集，数据放在客户端，降低数据库服务器压力，编程也简单。
+
+10.DataSet伪代码实现
+    SqlDataReader reader=……
+    List <string> list=new List<string>()
+    while(reader.Read())
+    {
+        list.Add(reader.GetString(0))
+    }
+
+    list//数据集
+
+11.用配置文件连接字符串步骤
+    1）添加一个应用程序配置文件App.config
+    2）App.config加节点，给连接字符串起名
+    3）项目添加对System.configuration的引用（添加程序集）
+    4）就能使用System.configuration的configurationManager类
+    5）使用时把.exe文件和.config文件一起考给用户，修改时直接在config文件中修改。
+   

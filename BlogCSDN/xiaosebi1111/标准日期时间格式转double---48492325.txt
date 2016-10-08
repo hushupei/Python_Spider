@@ -1,0 +1,170 @@
+
+        在项目中我们经常涉及到日期时间的数据，对于前端我们一般都是以人们熟悉的格式来展示，列如2015年9月16日10点28分50秒，我们一般会写成2015/9/16 10:28:50这样或者其他的容易被人们接受的格式。但是后台代码中我们一般会将它转为double类型的数据进行处理，也方便存储。下面是我从Swmm源码中了解到的一种转换方式，将他写下来加深自己的理解。 
+   在SWMM中，将“年月日”转换为“天”而将“时分秒”转换为“秒”，这样就涉及到一个起始时间，代码中将其实时间设为01/01/00也就是00年1月1日，它也提供了一个起始的double型日期数据693594（为什么是这个数？，不太了解希望有知道告知一下）。 
+   首先是将年月日转为天数，在这个过程当中就涉及到一个闰年，大家都知道闰年要比普通的年份要多一天（普通年份2月是28天，闰年的2月份是29天），程序中将这两种情况保存在数组中：
+
+
+ int DaysPerMonth[2
+][12
+] =      // days per month
+    {{31, 28, 31, 30, 31, 30,               // normal years
+
+      31, 31, 30, 31, 30, 31},
+
+     {31, 29, 31, 30, 31, 30,               // leap years
+
+      31, 31, 30, 31, 30, 31}};
+
+
+
+
+那么怎么判断某一年是否是闰年呢？百度百科上给出这样的计算过程： 
+ - 非整百年能被4整除的为闰年。 
+ - 整百年能被400整除的是闰年。(如2000年是闰年，1900年不是闰年) 
+ - 对于数值很大的年份,这年如果能被3200整除,并且能被172800整除则是闰年。如172800年是闰年，86400年不是闰年(因为虽然能被3200整除，但不能被172800整除) 
+ 当然这第三条就有点太远了，我们目前也无需考虑，下面则是闰年的判断代码：
+
+
+
+
+int
+ isLeapYear(int
+ year)//判断是否为闰年 是：返回1 不是：返回0
+
+{
+    if
+ ((year % 4
+   == 0
+)
+    && ((year % 100
+ != 0
+)
+    ||  (year % 400
+ == 0
+))) return
+ 1
+;
+    else
+ return
+ 0
+;
+}
+
+
+
+这样通过返回值我们也就可以直接从上面的DaysPerMonth数组中直接获取当年每个月的具体天数了。 
+ 知道了怎么判断闰年 我们就可以开始转换了，以2015年9月16日为例，首先我们得将年份转换为天数，2015年之前有2014个年份，这个时候我们考虑每一年无非就是两种情况闰年（366天）或者普通年份（365天）因此我们可以先将2014 * 365,这样得出来的一个天数其实是没有考虑闰年的情况，那么再将闰年的天数加上去，2014年前有多少个闰年呢？其实我们可以用2014/4 - 2014/100 + 2014/400这其实也是根据上面的判断条件来的，这样我们就可以得出有几个闰年，也就在原来普通年份的基础上加上几天。将年份转换后我们就得将月份转换为天数，9月前面已经过了8个月了而每个月的天数都保存在DaysPerMonth数组中了，我们做个加法就可以了，在加上具体的日我们就可以计算出天数了：
+
+
+
+
+DateTime datetime_encodeDate(int
+ year, int
+ month, int
+ day)
+
+//  Input:   year = a year
+
+//           month = a month (1 to 12)
+
+//           day = a day of month
+
+//  Output:  returns encoded value of year-month-day
+
+//  Purpose: encodes year-month-day to a DateTime value.
+
+
+{
+    int
+ i, j;
+    i = isLeapYear(year);
+    if
+ ((year >= 1
+)
+    && (year <= 9999
+)
+    && (month >= 1
+)
+    && (month <= 12
+)
+    && (day >= 1
+)
+    && (day <= DaysPerMonth[i][month-1
+]))
+    {
+        for
+ (j = 0
+; j < month-1
+; j++) day += DaysPerMonth[i][j];
+        i = year - 1
+;
+        return
+ i*365
+ + i/4
+ - i/100
+ + i/400
+ + day - DateDelta;
+    }
+    else
+ return
+ -DateDelta;
+}
+
+
+
+接下来就是转换时分秒的一个过程，这个过程其实很简单，一个小时有3600秒，一分钟有60秒，这样具体的秒数就等于小时*3600+分钟*60 + 秒，以10:28:50为例就是10*3600+28*60+50,这样算下来的秒数是一个整数，不好与上面的天数结合，因此我们将这个秒数再除以一天的总秒数86400.秒，这样我们就可以将整数部分来表示天数，小数部分来表示秒数。
+
+
+
+
+static
+ const
+ double
+ SecsPerDay = 86400.
+;    // seconds per day
+
+DateTime datetime_encodeTime(int
+ hour, int
+ minute, int
+ second)
+
+//  Input:   hour = hour of day (0-24)
+
+//           minute = minute of hour (0-60)
+
+//           second = seconds of minute (0-60)
+
+//  Output:  returns time encoded as fractional part of a day
+
+//  Purpose: encodes hour:minute:second to a DateTime value
+
+
+{
+    int
+ s;
+    if
+ ((hour >= 0
+)
+    && (minute >= 0
+)
+    && (second >= 0
+))
+    {
+        s = (hour * 3600
+ + minute * 60
+ + second);
+        return
+ (double
+)s/SecsPerDay;
+    }
+    else
+ return
+ 0.0
+;
+}
+
+
+
+这样一来就可以将具体的年月日时分秒转换为double了，下节记录下double转换为标准日期。 
+注：以上代码都来自SWMM源码
+

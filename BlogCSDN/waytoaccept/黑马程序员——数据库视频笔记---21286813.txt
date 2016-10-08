@@ -1,0 +1,51 @@
+
+
+
+之前有过数据库基础，所以数据库的做的有点少
+use stu
+insert into T_Student(Name,Age) 
+values('Y%K',29),
+      ('kkkk',23),
+      ('aaa啊啊',20),
+      ('saha1',23),
+      ('aadfaa啊啊',20),
+      ('haha2',23),
+      ('awetra啊啊',20),
+      ('hgha2',23),
+      ('aghj',20),
+      ('haha4',23),
+      ('aaaghj啊5',80)
+      
+select Top (50) percent  * from T_Student
+
+delete from T_Student where Age=23
+
+update T_Student set Age=Age+100,AiHao='Speak' where Age<25
+
+select * from T_Student where Name='YZK'
+
+select Name as 姓名,GETDATE() from T_Student
+
+select MAX(Age) as maxAge,MIN(Age)  as minAge from T_Student
+
+select COUNT(*),MIN(Age) from T_Student where Age>100
+
+select top 6 * from T_Student
+
+select * from T_Student
+
+select * from T_Student where Name like 'Y%'
+
+select * from T_Student where Name like 'a%k'
+
+select * from T_Student where Name like '%k%'
+
+
+显示刚插入数据的id
+insert into T_Student(Name,Age) output inserted.Id values('元芳',180)
+
+
+
+
+
+   

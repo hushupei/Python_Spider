@@ -1,0 +1,84 @@
+
+
+/***********************************************************************************/
+/*                          STL算法实践                                            */
+/*                          min_element算法                                        */
+/*                          max_element算法                                        */
+/* 原型 InputIterator min_element(InputIterator beg,InputIterator end)             */
+/* 原型 InputIterator max_element(InputIterator beg,InputIterator end,CompFunc op) */
+/* creat by Hoo                                                                    */
+/* date 2013/04/20                                                                 */
+/* VC++6.0                                                                         */
+/* src:标准C++程序库 第九章 侯捷/孟岩 译                                           */
+/***********************************************************************************/
+
+#include <iostream>
+#include <list>
+#include <deque>
+#include <vector>
+#include <set>
+#include <map>
+#include <string>
+#include <algorithm>
+#include <functional>
+#include <numeric>
+#include <cstdlib>
+using namespace std;
+
+template <class T>
+inline void print_elem(const T& coll,const char* optstr="")
+{
+	typename T::const_iterator pos;
+	cout<<optstr<<endl;
+	for(pos=coll.begin();pos!=coll.end();++pos)
+	{
+		cout<<*pos<<" ";
+	}
+	cout<<endl;
+	
+}
+
+template <class T>
+inline void insert_elem(T& coll,int first,int last)
+{
+	for(int i=first;i<=last;++i)
+	{
+		coll.insert(coll.end(),i);
+	}
+}
+/************************************************************************/
+/*                  test1                                               */
+/************************************************************************/
+
+bool absless(int elem1,int elem2)
+{
+	return abs(elem1)<abs(elem2);
+}
+
+int main()
+{
+	deque<int> coll;
+	insert_elem(coll,2,8);
+	insert_elem(coll,-3,5);
+	print_elem(coll);
+	
+	//process and print minnum and maxnum
+	cout<<"minnum:"<<*min_element(coll.begin(),coll.end())<<endl;
+
+	cout<<"maxnum:"<<*max_element(coll.begin(),coll.end())<<endl;
+
+	//process and print minnum and maxnum of absolute values
+	cout<<"minnum of absolute values:"<<*min_element(coll.begin(),coll.end(),absless)<<endl;
+
+	cout<<"maxnum of absolute values:"<<*max_element(coll.begin(),coll.end(),absless)<<endl;
+
+	return 0;
+}
+
+
+VC++6.0测试截图
+
+
+
+
+   

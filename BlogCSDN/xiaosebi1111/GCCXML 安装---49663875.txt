@@ -1,0 +1,33 @@
+
+
+GCCXML 作为一个补丁可以依附在编译器上，在编译代码的同时将代码以XML&#26684;式输出，在项目中，我需要将源码中的所有的函数提取出来，本来想通过正则表达式来提取的，奈何总感觉自己想出来的正则表达式可能存在什么漏洞，故而放弃，我想使用这种工具应该比我自己写一个总是靠谱些的。如果大家有什么更方便的工具，希望可以留言告诉我。
+
+ 
+
+以下都是在windows上完成的。
+
+ 
+
+GCCXML下载地址：https://github.com/gccxml/gccxml
+
+
+ 
+
+下载到的是GCCXML的源码，我们需要编译它，windows下的编译过程可以参考http://gccxml.github.io/HTML/Install.html
+
+
+按照说明文档我们需要安装cmake,网页上也提供了相应的下载链接，当然要编译当然需要编译器，我使用的是vs2010，然后就是配置cmake，在我的机器上下载的源码解压到了D盘根目录，然后在D盘根目录新建一个gccxml_build文件夹(当然路径是可以自己改的，路径最好不要有空&#26684;的)。
+
+ 
+
+配置完cmake之后的图是这样的：
+
+
+
+
+
+
+ 然后按照上面的一二三步，你会看到在gccxml_build文件夹下生成了很多东西，这些就是GCCXML源码的工程文件了，用vs2010打开gccxml.sln工程文件，然后编译ALL_BUILD就ok了，编译完成如果不出错的话会在bin目录下的Debug或者Release下生成gccxml.exe、gccxml_cc1plus.exe、gccxml_vcconfig.exe三个文件。这样就成功了。
+
+
+   

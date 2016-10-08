@@ -1,0 +1,91 @@
+
+
+/************************************************************************/
+/*                          STL算法实践                                 */
+/*                          count算法                                   */
+/*                          count_if算法                                */
+/* 原型 count(InputIterator beg,InputIterator end,const T& value)       */
+/* 原型 count_if(InputIterator beg,InputIterator end,UnaryPredicate op) */
+/* creat by Hoo                                                         */
+/* date 2013/04/20                                                      */
+/* VC++6.0                                                              */
+/* src:标准C++程序库 第九章 侯捷/孟岩 译                                */
+/************************************************************************/
+
+#include <iostream>
+#include <list>
+#include <deque>
+#include <vector>
+#include <set>
+#include <map>
+#include <string>
+#include <algorithm>
+#include <functional>
+#include <numeric>
+using namespace std;
+
+template <class T>
+inline void print_elem(const T& coll,const char* optstr="")
+{
+	typename T::const_iterator pos;
+	cout<<optstr<<endl;
+	for(pos=coll.begin();pos!=coll.end();++pos)
+	{
+		cout<<*pos<<" ";
+	}
+	cout<<endl;
+	
+}
+
+template <class T>
+inline void insert_elem(T& coll,int first,int last)
+{
+	for(int i=first;i<=last;++i)
+	{
+		coll.insert(coll.end(),i);
+	}
+}
+/************************************************************************/
+/*                  test1                                               */
+/************************************************************************/
+
+bool isEven(int elem)
+{
+	return elem%2==0;
+}
+
+int main()
+{
+	vector <int> coll;
+	int num;
+	
+	insert_elem(coll,1,9);
+	print_elem(coll,"coll:");
+
+	//count and print elements with value 4
+	num=count(coll.begin(),coll.end(),	//range
+		4);								//value
+	cout<<"number of equal to 4:"<<num<<endl;
+	
+	//count elements with even value
+	num=count_if(coll.begin(),coll.end(),	//range
+		isEven);							//criterion
+	cout<<"number of elements with even value:"<<num<<endl;
+
+	//count elements that are greater than value 4
+	num=count_if(coll.begin(),coll.end(),	//range
+		bind2nd(greater< int >(),4));			//criterion
+	cout<<"number of greater than value 4:"<<num<<endl;
+
+	return 0;
+}
+
+
+
+
+VC++6.0测试截图
+
+
+
+
+   

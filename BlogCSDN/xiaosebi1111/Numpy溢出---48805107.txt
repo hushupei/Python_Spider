@@ -1,0 +1,82 @@
+
+
+今天在看书时，按照书上的例子敲了一段代码，发现跟书上的结果有出入，具体代码如下：
+
+#coding = utf-8
+__author__ = 'Administrator'
+
+import sys
+from datetime import datetime
+import numpy as np
+
+"""
+vectorsum.py
+"""
+def numpysum(n):
+    a = np.arange(n) ** 2
+    b = np.arange(n) ** 3
+    c = a + b
+    return c
+
+def pythonsum(n):
+    a = range(n)
+    b = range(n)
+    c = []
+
+    for i in range(len(a)):
+        a[i] = a[i] ** 2
+        b[i] = b[i] ** 3
+        c.append(a[i] + b[i])
+
+    return c
+
+
+size = int(sys.argv[1])
+
+start = datetime.now()
+c = pythonsum(size)
+delta = datetime.now() - start
+
+print "The last 2 elements of the sum",c[-2:]
+print "pythonsum elapsed time in microseconds",delta.microseconds
+
+start1 = datetime.now()
+c = numpysum(size)
+delta1 = datetime.now() - start1
+
+print "The last 2 elements of the sum",c[-2:]
+print "numpysum elapsed time in microseconds ",delta1.microseconds
+
+执行 python vectorsum 10000 时发生如下错误
+
+vectorsum.py:13: RuntimeWarning: invalid value encountered in power
+  b = np.arange(n) ** 3
+The last 2 elements of the sum [999500079996L, 999800010000L]
+pythonsum elapsed time in microseconds 17000
+The last 2 elements of the sum [-2047523644 -2047503647]
+numpysum elapsed time in microseconds  2000
+
+
+
+
+
+上面的结果是对的  下面的numpy结果错了，然后国外的网站上提供了一个解决办法就是修改下numpysum函数修改完是这样的：
+
+def numpysum(n):
+    a = np.arange(n,dtype=object) ** 2
+    b = np.arange(n,dtype=object) ** 3
+    c = a + b
+    return c
+
+完了之后结果就一致了，vectorsum.py 10000
+The last 2 elements of the sum [999500079996L, 999800010000L]
+pythonsum elapsed time in microseconds 16000
+The last 2 elements of the sum [999500079996L 999800010000L]
+numpysum elapsed time in microseconds  12000
+
+
+
+
+主要原因貌&#20284;是由于python版本用的32位的。
+
+   

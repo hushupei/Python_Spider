@@ -1,0 +1,20 @@
+
+
+在项目中大量使用zincrby命令，原因就是要统计日志中某个指标的计数&#20540;，且需要按顺序返回topn。
+
+正常来说，一个指标调用一次zincrby（zincrby default:type 1 typeA) 就可以正常工作。
+
+实际情况是由于日志生成的太快，redis cpu利用率经常100%，而且还丢数据。
+
+是否可以一次性增加多次指标的累计&#20540;，比如zincrby default:type 1 typeA 1 typeB 1 typeC 。。。，这样将多次通信压缩到一次通信中，肯定能提高处理能力。
+
+无奈 zincrby只支持4个参数，redis官方文档上写的清楚：
+
+
+ZINCRBY
+ key
+ increment
+ member
+
+
+所以，想到了修改redis(2.4.17)源码来实现我自己的功能。

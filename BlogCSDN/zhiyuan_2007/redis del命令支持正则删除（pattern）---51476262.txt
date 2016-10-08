@@ -1,0 +1,51 @@
+
+        1、redis的del命令不像keys命令一样可以支持正则，所以有时候，想要删除一些无用的key的时候，只能用管道和linux命令组合起来达到目的，使用的例子见最下面。 
+2、redis的作者antirez说过不想del 支持正则匹配的原因，因为正则匹配是个耗费时间的操作，删除key的写操作和keys＊命令的读操作又不同，所以删除操作可能导致线上服务受到影响。 
+3、基于以上原因，redis作者是不会在主线版本支持正则删除的。 
+4、但是在我们自己的系统中，有时需要此命令，所以修改下源代码，让del 命令支持正则匹配。 
+5、源码git地址：https://github.com/zhiyuan2007/redis-del-with-pattern
+ 
+6、直接make即可，具体修改代码参见git项目的diff.txt文件。 
+7、使用例子如下： 
+127.0.0.1:6379> set 1.com 1 
+OK 
+127.0.0.1:6379> set 2.com 2 
+OK 
+127.0.0.1:6379> set 3.com 3 
+OK 
+127.0.0.1:6379> set 1.cn 1 
+OK 
+127.0.0.1:6379> set 2.cn 2 
+OK 
+127.0.0.1:6379> del *.com 
+(integer) 3 
+127.0.0.1:6379> keys * 
+1) “1.cn” 
+2) “2.cn” 
+127.0.0.1:6379> set 1.cn.com 1 
+OK 
+127.0.0.1:6379> set 1.cn.net 2 
+OK 
+127.0.0.1:6379> set 1.cn.org 3 
+OK 
+127.0.0.1:6379> del 1.cn.* 
+(integer) 3 
+127.0.0.1:6379> keys * 
+1) “1.cn” 
+2) “2.cn” 
+127.0.0.1:6379> del [12].cn 
+(integer) 2 
+127.0.0.1:6379> keys * 
+(empty list or set)
+
+
+8、使用linux命令和管道批量删除key 
+127.0.0.1:6379> set 1.cn.com 1 
+OK 
+127.0.0.1:6379> set 1.cn.net 2 
+OK 
+127.0.0.1:6379> set 1.cn.org 3 
+OK 
+127.0.0.1:6379>  
+[liuguirong@localhost redis-3.0.5]$ redis-cli keys 1.cn*|xargs redis-cli del  
+(integer) 3

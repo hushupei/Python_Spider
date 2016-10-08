@@ -1,0 +1,24 @@
+
+
+1.父类的变量可以指向子类的实例，反之不行。
+2.string s1="";空字符串，但不是空。string s2=null;表示没有指向任何对象。不可空类型，加上?后可空如：int? i=null;
+可以把int赋&#20540;给int?，反之不行。
+3.checkBox中IsChecked为bool?类型
+4.因为可能不选择任何日期，所以datePicker的selecteddate属性为可空类型。并且可被赋&#20540;。
+5.DateTime.Now:包含年月日时分秒
+  DateTime.Today：包括年月日
+6.连连看棋盘
+    1）生成10x10的grid
+    2）生成10X10个图片，随即指定路径
+7.Window的几个属性设置
+    1）窗口标题title属性
+    2）窗口固定大小ResizeMode="NoResize"
+    3）窗口打开位于中央WindowStartupLocation="CenterScreen"
+    4）窗口高heigh窗口宽width
+    5) 窗口默认最大化WindowState="Maximized"
+8.窗口的ShowDialog方法显示窗口
+9.Close()方法关闭窗口
+10.如果一个窗口用ShowDialog打开，则给DialogResult赋&#20540;会自动关闭窗口，且DialogResult的&#20540;会通过ShowDialog方法的返回&#20540;返回。
+11.打开文件对话框，过滤器的用法，文件名获得  OpenFileDialog类
+12.保存文件对话框，过滤器  SaveFileDialog类的用法
+   

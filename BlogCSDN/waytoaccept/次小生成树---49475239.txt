@@ -1,0 +1,144 @@
+
+
+次小生成树算法
+
+
+如果你理解了次短路（第二最短路），那么理解次小生成树就很容易了。同样是利用“不破不立”的思想
+
+算法思想
+
+1.求原图的最小生成树，保存树的每一条边
+
+2.依次删除生成树的每一条边（破），重新计算图的生成树（立），然后把新的生成树代价排序，最小那个就是（可能会与原生成树相同，根据题目要求即可）
+
+注：每次计算完新的生成树后，要恢复原图（恢复现场）
+
+#include <iostream>
+#include<stdio.h>
+#define N 205
+#define MAX 0x03fffffff
+using namespace std;
+int Metrix[N][N];
+int low[N];
+int visit[N];
+struct edge
+{
+    int s,t,cost;
+}E[N],Arc[N];
+
+void OutputPath(int root,int NV)//root为根，NV为节点数
+{
+    cout<<"-------------------------"<<endl;
+    for(int i=1;i<=NV;i++)
+    {
+        if(i!=root)
+        {
+            cout<<E[i].s<<"-->"<<E[i].t<<":"<<E[i].cost<<endl;
+        }
+    }
+}
+int MST(int root,int NV)//NV为节点数
+{
+    int ret=0,u=root;
+    for(int i=1;i<=NV;i++)
+    {
+        low[i]=MAX;
+        visit[i]=0;
+        E[i].t=i;
+    }
+    low[u]=0;
+    for(int i=1;i<=NV;i++)
+    {
+        int min_value=MAX+1;
+        for(int j=1;j<=NV;j++)
+        {
+            if(visit[j]==0&&low[j]<min_value)
+            {
+                min_value=low[j];
+                u=j;
+            }
+        }
+        visit[u]=1;
+        ret+=low[u];
+        if(min_value==MAX)return -1;
+        for(int j=1;j<=NV;j++)
+        {
+            if(visit[j]==0&&Metrix[u][j]<low[j])
+            {
+                low[j]=Metrix[u][j];
+                E[j].s=u;
+                E[j].cost=Metrix[u][j];
+            }
+        }
+    }
+    OutputPath(root,NV);
+    return ret;
+}
+int MST2th(int root,int NV)
+{
+    if(MST(root,NV)==-1)return -1;
+    for(int i=1;i<=NV;i++)
+    {
+        if(i!=root)
+        {
+            Arc[i].s=E[i].s;
+            Arc[i].t=E[i].t;
+            Arc[i].cost=E[i].cost;
+        }
+    }
+    int min_value=MAX+1;//次小
+    for(int i=1;i<=NV;i++)
+    {
+        if(i!=root)
+        {
+            //删去边，重新计算
+            int u=Arc[i].s;
+            int v=Arc[i].t;
+            Metrix[u][v]=Metrix[v][u]=MAX;
+            int temp=MST(root,NV);
+            if(temp!=-1&&temp<min_value)
+            {
+                min_value=temp;
+            }
+            Metrix[u][v]=Metrix[v][u]=Arc[i].cost;//恢复现场
+        }
+    }
+    return min_value!=-1?min_value:-1;
+}
+int main()
+{
+    int n,m;//n为节点，m为边数
+    while(EOF!=scanf("%d%d",&n,&m))
+    {
+        for(int i=1;i<=n;i++)
+        {
+            for(int j=1;j<=n;j++)
+            {
+                if(i==j)
+                {
+                    Metrix[i][j]=0;
+                }
+                else
+                {
+                    Metrix[i][j]=MAX;
+                    Metrix[j][i]=MAX;
+                }
+            }
+        }
+        int s,t,d;
+        for(int i=0;i<m;i++)
+        {
+            scanf("%d%d%d",&s,&t,&d);
+            Metrix[s][t]=Metrix[t][s]=d;
+        }
+        int root=1;
+        cout<<MST2th(root,n)<<endl;
+    }
+    return 0;
+}
+
+
+
+
+
+   

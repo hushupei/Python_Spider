@@ -1,0 +1,10 @@
+
+
+1 strcpy(dest, src) ,将src所指字符串拷贝到dest中，直到src中找到 '\0' 为止，实际情况中如果dest所指空间小于src长度，也直接覆盖，所以可能导致段错误。
+
+2 strncpy(dest, src, num), 将src所指的内容的前num个拷贝到dest中，不会自动添加'\0'。 如果src长度小于num，则全拷贝，并将剩余的num-strlen(src）以’\0'填充。 
+
+
+如果src长度大于num， 则只拷贝前num个。如果num大于dest长度，则可能产生段错误。
+
+   
